@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Office Dashboard – Attendance Reports</title>
+  <script src="common.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f3f7ff;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #1e3a8a;
+    }
+    .section {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: 30px auto;
+      text-align: center;
+    }
+    button, input, select {
+      padding: 8px 14px;
+      margin: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+    .btn {
+      background: linear-gradient(135deg,#2563eb,#1e40af);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: .2s;
+    }
+    .btn:hover { transform: scale(1.05); }
+    footer {
+      text-align: center;
+      color: #555;
+      margin-top: 40px;
+      font-size: 14px;
+    }
+    /* === Lock / Unlock Slider Switch === */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 70px;
+  height: 30px;
+  vertical-align: middle;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 30px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 24px;
+  width: 24px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: transform 0.4s ease;
+  border-radius: 50%;
+}
+
+/* Move handle to right when checked */
+input:checked + .slider:before {
+  transform: translateX(40px);
+}
+
+/* Gradient background when locked */
+input:checked + .slider {
+  background: linear-gradient(135deg,#2563eb,#1e40af);
+}
+
+/* Text label overlay */
+.slider::after {
+  content: attr(data-label);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  pointer-events: none;
+}
+  </style>
+</head>
+
+<body onload="initOffice()">
+
+  <h2>Office Dashboard – Attendance Reports</h2>
+  <button class="btn" onclick="logout()">Logout</button>
+  <div class="section">
+    <h3>Download Attendance Reports</h3>
+    <label>Date:
+      <input type="date" id="date">
+    </label>
+    <label>Batch:
+      <select id="batch">
+        <option value="FN">FN</option>
+        <option value="AN">AN</option>
+      </select>
+    </label>
+    <br>
+    <button class="btn" onclick="downloadAbsentees()">Download Absentees CSV</button>
+    <button class="btn" onclick="downloadOD()">Download OD CSV</button>
+    <button class="btn" onclick="loadAttendanceStatus()">View Status</button>
+    <div class="lock-toggle">
+  <label class="switch">
+    <input type="checkbox" id="lockToggleBtn" onchange="updateSliderLabel(this)">
+    <span class="slider" data-label="Unlock"></span>
+  </label>
+  <span id="lockMessage" style="color:red; font-weight:600; margin-left:10px;"></span>
+</div>
+
+  <footer>College Attendance System</footer>
+
+  <script>
+    function updateSliderLabel(input) {
+  const slider = input.nextElementSibling;
+  slider.setAttribute("data-label", input.checked ? "Lock" : "Unlock");
+}
+    let absenteesData = [];
+    let odData = [];
+    let currentUser = { email: "", role: "" };
+
+    function initOffice() {
+      const user = requireRole("Office");
+      if (!user) return;
+  currentUser = user;
+  updateLockToggleButton();
+    }
+  
+
+
+    /* === Fetch Data === */
+    async function fetchAttendanceData() {
+  const date = document.getElementById("date").value;
+  const batch = document.getElementById("batch").value;
+  if (!date) { alert("Please select a date."); return null; }
+
+  const res = await fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({ action: "getCollegeAbsenteesForOffice", date, batch })
+  });
+  const data = await res.json();
+
+  if (!data.success) {
+    alert(data.message || "Failed to fetch data.");
+    return null;
+  }
+
+  // ✅ Fixed property names
+  absenteesData = data.absentees || [];
+  odData = data.ods || [];
+
+  return true;
+}
+
+    /* === Download Absentees CSV === */
+    async function downloadAbsentees() {
+      const ok = await fetchAttendanceData();
+      if (!ok || !absenteesData.length) {
+        alert("No absentees found for this date and batch.");
+        return;
+      }
+
+      const headers = [
+        "RollNo","Name","Department","Year","Section","Reason","ParentName","ParentPhone"
+      ];
+      let csv = headers.join(",") + "\n";
+      absenteesData.forEach(r => {
+        csv += [
+          r.RollNo || "", r.Name || "", r.Department || "", r.Year || "",
+          r.Section || "", r.Reason || "", r.ParentName || "", r.ParentPhone || ""
+        ].join(",") + "\n";
+      });
+
+      const blob = new Blob([csv], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `Absentees_${document.getElementById("date").value}_${document.getElementById("batch").value}.csv`;
+      a.click();
+    }
+
+    /* === Download OD CSV === */
+    async function downloadOD() {
+      const ok = await fetchAttendanceData();
+      if (!ok || !odData.length) {
+        alert("No OD records found for this date and batch.");
+        return;
+      }
+
+      const headers = [
+        "RollNo","Name","Department","Year","Section","Reason","ParentName","ParentPhone"
+      ];
+      let csv = headers.join(",") + "\n";
+      odData.forEach(r => {
+        csv += [
+          r.RollNo || "", r.Name || "", r.Department || "", r.Year || "",
+          r.Section || "", r.Reason || "", r.ParentName || "", r.ParentPhone || ""
+        ].join(",") + "\n";
+      });
+
+      const blob = new Blob([csv], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `OD_${document.getElementById("date").value}_${document.getElementById("batch").value}.csv`;
+      a.click();
+    }
+
+async function loadAttendanceStatus() {
+  const date = document.getElementById("date").value;
+  console.log(date)
+  const batch = document.getElementById("batch").value;
+  if (!date) return alert("Select a date");
+
+  const res = await fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({ action: "getAttendanceStatusSummary", date, batch })
+  });
+  const data = await res.json();
+  if (!data.success) return alert(data.message);
+
+  let html = `<div id="popupOverlay" style="
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 9999;">
+      <div id="popupBox" style="
+        background: white; border-radius: 10px; padding: 25px; 
+        width: 80%; max-height: 80%; overflow-y: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+        <h3 style="color:#1e3a8a; text-align:center;">Attendance Status for ${date} (${batch})</h3>
+        <button style="float:right; margin-top:-35px; background:red; color:white; border:none; border-radius:6px; padding:6px 10px; cursor:pointer;"
+                onclick="document.getElementById('popupOverlay').remove()">Close</button>
+        <div style="margin-top:20px;">`;
+
+  if (!data.summary.length) {
+    html += `<p>No records found for selected date & batch.</p>`;
+  } else {
+    data.summary.forEach(deptData => {
+      html += `<h4 style="margin-top:20px;color:#1e3a8a;">${deptData.department}</h4>`;
+      html += `<div style="display:flex; flex-wrap:wrap; gap:10px;">`;
+
+      deptData.records
+        .sort((a,b)=> (a.Year+b.Section).localeCompare(b.Year+b.Section))
+        .forEach(r => {
+          let color = "gray";
+          let statusText = r.Status;
+          if (r.Status === "Taken") color = "green";
+          else if (r.Status === "Not Taken") color = "red";
+          html += `<div style="
+              background:#f9f9ff;
+              border-left:6px solid ${color};
+              padding:10px 15px;
+              border-radius:8px;
+              min-width:120px;
+              text-align:center;
+              font-weight:600;
+            ">
+              ${r.Year}-${r.Section}<br>
+              <span style="color:${color};">${statusText}</span>
+            </div>`;
+        });
+
+      html += `</div>`;
+    });
+  }
+
+  html += `</div></div></div>`;
+  document.body.insertAdjacentHTML("beforeend", html);
+}
+
+// === Lock / Unlock Attendance (Improved version) ===
+async function updateLockToggleButton() {
+  const date = document.getElementById("date").value;
+  const batch = document.getElementById("batch").value;
+  const checkbox = document.getElementById("lockToggleBtn");
+  const msg = document.getElementById("lockMessage");
+
+  if (!date || !batch) {
+    checkbox.checked = false;
+    checkbox.disabled = true;
+    msg.innerText = "";
+    return;
+  }
+
+  checkbox.disabled = false;
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "checkLockStatus", date, batch })
+    });
+    const data = await res.json();
+
+    if (data.locked) {
+      checkbox.checked = true;
+      msg.innerText = `Locked by ${data.role} (${data.lockedBy})`;
+      msg.style.color = "green";
+    } else {
+      checkbox.checked = false;
+      msg.innerText = "Unlocked";
+      msg.style.color = "red";
+    }
+  } catch (err) {
+    console.error(err);
+    msg.innerText = "Error checking lock status";
+    msg.style.color = "red";
+  }
+}
+
+// === Handle Toggle ===
+document.getElementById("lockToggleBtn").addEventListener("change", toggleLock);
+document.getElementById("date").addEventListener("change", updateLockToggleButton);
+document.getElementById("batch").addEventListener("change", updateLockToggleButton);
+
+async function toggleLock() {
+  const checkbox = document.getElementById("lockToggleBtn");
+  checkbox.disabled = true;
+
+  const date = document.getElementById("date").value;
+  const batch = document.getElementById("batch").value;
+
+  if (!date || !batch) {
+    alert("Select date & batch first");
+    checkbox.disabled = false;
+    return;
+  }
+
+  const action = checkbox.checked ? "lockAttendance" : "unlockAttendance";
+  const payload = {
+    action,
+    date,
+    batch,
+    email: currentUser.email,
+    role: currentUser.role
+  };
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    alert(data.message);
+  } catch (err) {
+    console.error(err);
+    alert("Error connecting to server");
+  } finally {
+    await updateLockToggleButton(); 
+    checkbox.disabled = false;
+    updateSliderLabel(checkbox);
+
+  }
+}
+
+
+</script>
+
+</body>
+</html>
+

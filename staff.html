@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Dashboard - Daily Attendance</title>
+  <script src="common.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #eef3ff, #ffffff);
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    h1 { color: #1e3a8a; font-size: 22px; margin-bottom: 8px; }
+    hr { border: 0; border-top: 1px solid #ddd; margin: 15px 0; }
+
+    .u-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-start;
+      margin-bottom: 12px;
+    }
+
+    label { font-weight: 600; color: #333; }
+    select, input[type="date"] {
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      color: white;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+    .btn:hover { transform: scale(1.05); }
+
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .student {
+      width: 120px;
+      padding: 10px;
+      text-align: center;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+      font-size: 13px;
+      border: 1px solid #ccc;
+      background: #d4f7d4; /* Present by default */
+    }
+
+    .student.absent { background: #f9d0d0; border-color: #d9534f; }
+    .student.od { background: #e6d6f7; border-color: #8a2be2; color: #3b0764; }
+
+    #toast {
+      visibility: hidden;
+      min-width: 250px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 8px;
+      padding: 12px;
+      position: fixed;
+      z-index: 1;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.5s, bottom 0.5s;
+    }
+
+    #toast.show {
+      visibility: visible;
+      opacity: 1;
+      bottom: 50px;
+    }
+
+    @media (max-width: 768px) {
+      .student { width: 100px; font-size: 11px; }
+      .u-row { flex-direction: column; align-items: flex-start; }
+      select, input, .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body onload="initStaff()">
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <div>
+        <h1>Staff Dashboard</h1>
+        <div id="welcome" style="font-size:13px;color:#555;"></div>
+      </div>
+      <button class="btn" onclick="logout()">Logout</button>
+    </div>
+
+    <hr>
+
+    <div class="u-row">
+      <label>Date:</label>
+      <input type="date" id="dateFilter">
+
+      <label>Batch:</label>
+      <select id="batchSelect">
+        <option value="FN">FN</option>
+        <option value="AN">AN</option>
+      </select>
+
+      <label>Year:</label>
+      <select id="yearSelect">
+        <option value="">Select</option>
+        <option>I</option>
+        <option>II</option>
+        <option>III</option>
+        <option>IV</option>
+      </select>
+
+      <label>Section:</label>
+      <select id="sectionSelect">
+        <option value="">Select</option>
+        <option>A</option>
+        <option>B</option>
+        <option>C</option>
+      </select>
+
+      <button class="btn" onclick="loadStudents()">Load Students</button>
+      <button class="btn" id="saveBtn" onclick="saveAttendance()" disabled>Save</button>
+    </div>
+
+    <div id="grid" class="grid"></div>
+  </div>
+
+  <div id="toast"></div>
+
+<script>
+  
+let user = null;
+let studentList = [];
+let isLocked = false;
+
+/* === INIT === */
+function initStaff() {
+  user = requireRole("Staff");
+  if (!user) return;
+  document.getElementById("welcome").innerText =
+    `Signed in as: ${user.name} — Department: ${user.department}`;
+}
+
+/* === Load Students === */
+async function loadStudents() {
+  const date = document.getElementById("dateFilter").value;
+  const batch = document.getElementById("batchSelect").value;
+  const year = document.getElementById("yearSelect").value;
+  const section = document.getElementById("sectionSelect").value;
+
+  if (!date || !year || !section) return alert("Please select Date, Year, and Section");
+
+  document.getElementById("grid").innerHTML = "<div>Loading students...</div>";
+  document.getElementById("saveBtn").disabled = true;
+
+  try {
+    // --- Step 1: Check Lock Status ---
+    const lockCheck = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "checkLockStatus", date, batch })
+    });
+    const lockData = await lockCheck.json();
+
+    isLocked = lockData.locked || false;
+
+    if (isLocked) {
+      const role = lockData.role || "Unknown Role";
+      const lockedBy = lockData.lockedBy || "Unknown User";
+      alert(`Attendance is locked for this date & batch.\nLocked by admin.\nYou can only view data.`);
+    }
+
+    // --- Step 2: Load Students ---
+    const res = await apiFetch({
+      action: "getStudents",
+      department: user.department,
+      year,
+      section,
+      date,
+      batch
+    });
+
+    if (!res.success) {
+      document.getElementById("grid").innerHTML = "Error loading students.";
+      return;
+    }
+
+    studentList = res.students || [];
+    renderGrid();
+
+  } catch (err) {
+    console.error("Load failed:", err);
+    alert("Error loading data.");
+  }
+}
+
+/* === Render Grid === */
+function renderGrid() {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  if (!studentList.length) {
+    grid.innerHTML = "<div>No students found.</div>";
+    document.getElementById("saveBtn").disabled = true;
+    return;
+  }
+
+  studentList.forEach((stu, i) => {
+    const div = document.createElement("div");
+    let cls = "student present";
+    if (stu.Status === "Absent") cls = "student absent";
+    else if (stu.Status === "OD") cls = "student od";
+    div.className = cls;
+    div.innerHTML = `<strong>${stu.RollNo}</strong><br>${stu.Name}`;
+    div.dataset.index = i;
+
+    if (!isLocked) {
+      // Allow editing only if not locked
+      div.addEventListener("click", e => singleClick(e, () => markAbsent(i, div)));
+      div.addEventListener("dblclick", e => { e.preventDefault(); markOD(i, div); });
+    } else {
+      div.style.cursor = "not-allowed";
+      div.title = "Locked — View only";
+    }
+
+    grid.appendChild(div);
+  });
+
+  // Enable Save button only if unlocked
+  document.getElementById("saveBtn").disabled = isLocked;
+}
+
+/* === Attendance Marking === */
+let clickTimer = null;
+function singleClick(e, singleFn) {
+  if (clickTimer !== null) {
+    clearTimeout(clickTimer);
+    clickTimer = null;
+    return;
+  }
+  clickTimer = setTimeout(() => { singleFn(); clickTimer = null; }, 250);
+}
+
+function markAbsent(i, div) {
+  if (studentList[i].Status === "Absent") {
+    studentList[i].Status = "Present";
+    div.className = "student present";
+  } else {
+    studentList[i].Status = "Absent";
+    div.className = "student absent";
+  }
+}
+
+function markOD(i, div) {
+  if (studentList[i].Status === "OD") {
+    studentList[i].Status = "Present";
+    div.className = "student present";
+  } else {
+    studentList[i].Status = "OD";
+    div.className = "student od";
+  }
+}
+
+/* === Save Attendance === */
+async function saveAttendance() {
+  if (isLocked) {
+    alert("Attendance is locked. You cannot make changes.");
+    return;
+  }
+
+  const date = document.getElementById("dateFilter").value;
+  const batch = document.getElementById("batchSelect").value;
+  if (!date) return alert("Select date");
+
+  const updates = studentList.map(s => ({
+    RollNo: s.RollNo,
+    Name: s.Name,
+    ParentName: s.ParentName,
+    ParentPhone: s.ParentPhone,
+    Department: s.Department,
+    Year: s.Year,
+    Section: s.Section,
+    Status: s.Status,
+    Reason: s.Reason || ""
+  }));
+
+  const res = await apiFetch({ action: "saveAttendance", date, batch, updates });
+
+  if (res.success) {
+    showToast(`Attendance saved successfully!`);
+    await apiFetch({
+      action: "saveAttendanceStatus",
+      date,
+      batch,
+      year: document.getElementById("yearSelect").value,
+      section: document.getElementById("sectionSelect").value,
+      department: user.department,
+      status: "Taken"
+    });
+  } else {
+    showToast("Save failed: " + (res.message || ""));
+  }
+}
+
+/* === Toast === */
+function showToast(msg) {
+  const toast = document.getElementById("toast");
+  toast.innerHTML = msg;
+  toast.className = "show";
+  setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+}
+</script>
+
+</body>
+</html>
+
+

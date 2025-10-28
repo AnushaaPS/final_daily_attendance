@@ -1,0 +1,260 @@
+/* ===== Base Page Styling ===== */
+html {
+  font-size: 16px; /* makes rem-based scaling consistent */
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f3f7ff;
+  margin: 0;
+  padding: 20px;
+  position: relative;
+  line-height: 1.5;
+}
+
+h2 {
+  text-align: center;
+  color: #1e3a8a;
+  margin: 0;
+  padding-top: 10px;
+  font-size: 1.5rem;
+}
+
+/* ===== Logout Button (Top Right) ===== */
+.logout-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg,#ef4444,#b91c1c);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+  font-size: 1rem;
+}
+.logout-btn:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg,#dc2626,#991b1b);
+}
+
+/* ===== Section (Main Card) ===== */
+.section {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  max-width: 700px;
+  margin: 90px auto 30px;
+  text-align: center;
+}
+
+button, input, select {
+  padding: 10px 14px;
+  margin: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  width: auto;
+}
+
+.btn {
+  background: linear-gradient(135deg,#2563eb,#1e40af);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.btn:hover {
+  transform: scale(1.05);
+}
+
+/* ===== Scrollable Table ===== */
+.table-container {
+  overflow-x: auto;
+  margin-top: 20px;
+  border-radius: 10px;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 500px;
+}
+th, td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+th {
+  background-color: #1e3a8a;
+  color: white;
+}
+
+/* ===== Status Cards Grid ===== */
+.status-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+.status-card {
+  background: #f9f9ff;
+  border-left: 6px solid gray;
+  padding: 10px 15px;
+  border-radius: 8px;
+  min-width: 120px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ===== Footer ===== */
+footer {
+  text-align: center;
+  color: #555;
+  margin-top: 40px;
+  font-size: 0.9rem;
+}
+
+/* ============================= */
+/* ===== Popup Styling ======== */
+/* ============================= */
+#popupOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+#popupBox {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  width: 80%;
+  max-width: 800px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  position: relative;
+}
+
+#popupBox h3 {
+  color: #1e3a8a;
+  text-align: center;
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+}
+
+/* Close Button */
+#popupBox .close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: red;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+#popupBox .close-btn:hover {
+  background: #b91c1c;
+}
+
+/* ============================= */
+/* ===== Responsive Design ===== */
+/* ============================= */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+    font-size: 0.95rem;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+  }
+
+  .section {
+    width: 95%;
+    margin: 70px auto 20px;
+    padding: 18px;
+  }
+
+  button, input, select {
+    width: 100%;
+    margin: 6px 0;
+    font-size: 0.95rem;
+  }
+
+  .btn {
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .logout-btn {
+    top: 10px;
+    right: 10px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+
+  table {
+    font-size: 0.9rem;
+    min-width: 400px;
+  }
+
+  /* Popup adjustments for tablets & phones */
+  #popupBox {
+    width: 95%;
+    max-height: 80vh;
+    padding: 18px;
+    border-radius: 10px;
+  }
+
+  #popupBox h3 {
+    font-size: 1rem;
+  }
+
+  #popupBox .close-btn {
+    top: 8px;
+    right: 8px;
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+
+  .status-card {
+    min-width: 100px;
+    font-size: 0.9rem;
+    padding: 8px 10px;
+  }
+}
+
+/* ===== Extra small screens (phones <480px) ===== */
+@media (max-width: 480px) {
+  html {
+    font-size: 15px; /* slightly larger for readability */
+  }
+
+  .section {
+    padding: 15px;
+  }
+
+  button, input, select {
+    font-size: 1rem;
+    padding: 9px 12px;
+  }
+
+  #popupBox {
+    width: 96%;
+    padding: 12px;
+    max-height: 78vh;
+  }
+
+  #popupBox h3 {
+    font-size: 1rem;
+  }
+}

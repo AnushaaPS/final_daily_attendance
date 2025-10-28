@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HoD Dashboard – Attendance & Management</title>
+  <script src="common.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background:#f5f8ff; margin:0; padding:20px; }
+    h2 { text-align:center; color:#1e3a8a; }
+    .section { margin-bottom:30px; }
+    button, input, select { padding:6px 10px; margin:5px; border-radius:6px; border:1px solid #ccc; }
+    .btn { background:linear-gradient(135deg,#2563eb,#1e40af); color:white; border:none; cursor:pointer; transition:.2s; }
+    .btn:hover { transform:scale(1.05); }
+    #summaryGrid { display:flex; flex-wrap:wrap; gap:15px; justify-content:center; }
+    .card { background:white; padding:15px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); width:180px; text-align:center; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th, td { border:1px solid #ddd; padding:8px; text-align:center; }
+    th { background:#1e3a8a; color:white; }
+    .file-input { margin:10px 0; }
+
+    /* Popup modal */
+    .modal {
+      display:none; position:fixed; z-index:10; left:0; top:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.5); justify-content:center; align-items:center;
+    }
+    .modal-content {
+      background:white; padding:20px; border-radius:10px; width:450px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.3);
+    }
+    .close-btn {
+      background:red; color:white; border:none; border-radius:5px; padding:5px 10px;
+      float:right; cursor:pointer;
+    }
+  </style>
+</head>
+<body onload="initHOD()">
+
+  <h2>HoD Dashboard – Department: <span id="hodDept"></span></h2>
+
+  <!-- Attendance Summary -->
+  <div class="section">
+    <h3>Attendance Summary</h3>
+    <div class="filters">
+      <label>Date: <input type="date" id="date"></label>
+      <label>Batch:
+        <select id="batch">
+          <option value="FN">FN</option>
+          <option value="AN">AN</option>
+        </select>
+      </label>
+      <button class="btn" onclick="loadSummary()">Load Summary</button>
+      <button class="btn" onclick="downloadSummaryCSV()">Download Class Summary</button>
+      <button class="btn" onclick="downloadStudentwiseCSV()">Download Studentwise Report</button>
+      <button class="btn" onclick="logout()">Logout</button>
+    </div>
+    <div id="summaryGrid"></div>
+  </div>
+
+  <!-- Search student history -->
+  <div class="section">
+    <h3>Student Attendance History</h3>
+    <input type="text" id="rollSearch" placeholder="Enter Roll No" />
+    <button class="btn" onclick="viewStudentHistory()">View History</button>
+  </div>
+
+  <!-- Manage Faculty Users -->
+  <div class="section">
+    <h3>Faculty Users</h3>
+    <button class="btn" onclick="downloadUsersTemplate()">Download Template</button>
+    <input type="file" id="usersFile" class="file-input" accept=".csv">
+    <button class="btn" onclick="uploadUsers()">Upload Faculty</button>
+    <table id="usersTable">
+      <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Action</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- Upload Students -->
+  <div class="section">
+    <h3>Upload Students List</h3>
+    <button class="btn" onclick="downloadStudentsTemplate()">Download Template</button>
+    <input type="file" id="studentsFile" class="file-input" accept=".csv">
+    <button class="btn" onclick="uploadStudents()">Upload Students</button>
+  </div>
+
+  <!-- Student History Modal -->
+  <div id="historyModal" class="modal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeHistory()">X</button>
+      <h3 id="historyTitle"></h3>
+      <table style="width:100%; border-collapse:collapse;">
+        <thead><tr><th>Date</th><th>Batch</th><th>Status</th><th>Reason</th></tr></thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+      <div id="historySummary" style="text-align:center; margin-top:10px; font-weight:600;"></div>
+    </div>
+  </div>
+
+  <script>
+    let hodDept = "";
+    let absentees = [];
+
+    /* === INIT === */
+    function initHOD() {
+      const user = requireRole("HoD");
+      if(!user) return;
+      hodDept = user.department;
+      document.getElementById("hodDept").innerText = hodDept;
+
+      loadFacultyUsers();
+    }
+
+    /* === Load Attendance Summary === */
+    async function loadSummary() {
+      const date = document.getElementById("date").value;
+      const batch = document.getElementById("batch").value;
+      if(!date) return alert("Select a date");
+
+      const res = await fetch(SCRIPT_URL, {
+        method:"POST",
+        body: JSON.stringify({action:"getAbsenteesForFaculty", department: hodDept, date, batch})
+      });
+      const data = await res.json();
+      if(!data.success) return alert(data.message);
+
+      absentees = data.records;
+      renderSummaryGrid();
+    }
+
+    /* === Render Grid === */
+    function renderSummaryGrid() {
+      const summaryDiv = document.getElementById("summaryGrid");
+      summaryDiv.innerHTML = "";
+      if(!absentees.length) { summaryDiv.innerText = "No records found."; return; }
+
+      const classMap = {};
+      absentees.forEach(s=>{
+        const key = `${s.Year} ${s.Section}`;
+        if(!classMap[key]) classMap[key]={total:0,present:0,absent:0};
+        classMap[key].total+=1;
+        if(s.Status==='Absent'||s.Status==='OD') classMap[key].absent+=1;
+        else classMap[key].present+=1;
+      });
+
+      for(const key in classMap){
+        const [year,section]=key.split(" ");
+        const c=classMap[key];
+        const percent=((c.present/c.total)*100).toFixed(2);
+        const card = document.createElement("div");
+        card.className="card";
+        card.innerHTML=`<h4>${year} ${section}</h4>
+                        <p><strong>Total:</strong>${c.total}</p>
+                        <p style="color:green;"><strong>Present:</strong>${c.present}</p>
+                        <p style="color:red;"><strong>Absent/OD:</strong>${c.absent}</p>
+                        <p><strong>Attendance %:</strong>${percent}%</p>`;
+        summaryDiv.appendChild(card);
+      }
+    }
+
+    /* === Download Class Summary CSV (Updated) === */
+function downloadSummaryCSV() {
+  if (!absentees.length) return alert("No records to download");
+
+  // Step 1: Build class-wise summary same as renderSummaryGrid()
+  const classMap = {};
+  absentees.forEach(s => {
+    const key = `${s.Year} ${s.Section}`;
+    if (!classMap[key]) classMap[key] = { total: 0, present: 0, absent: 0 };
+    classMap[key].total += 1;
+    if (s.Status === "Absent" || s.Status === "OD") classMap[key].absent += 1;
+    else classMap[key].present += 1;
+  });
+
+  // Step 2: Create CSV header
+  const header = ["Year", "Section", "Total Students", "Present", "Absent/OD", "Attendance %"];
+  let csv = header.join(",") + "\n";
+
+  // Step 3: Add each class summary as a row
+  for (const key in classMap) {
+    const [year, section] = key.split(" ");
+    const c = classMap[key];
+    const percent = ((c.present / c.total) * 100).toFixed(2);
+    csv += [year, section, c.total, c.present, c.absent, `${percent}%`].join(",") + "\n";
+  }
+
+  // Step 4: Trigger file download
+  const date = document.getElementById("date").value || "UnknownDate";
+  const batch = document.getElementById("batch").value || "FN";
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `ClassSummary_${hodDept}_${date}_${batch}.csv`;
+  a.click();
+}
+
+
+    /* === Download Studentwise Absent/OD CSV === */
+    function downloadStudentwiseCSV() {
+      if(!absentees.length) return alert("No data to download");
+      const date = document.getElementById("date").value;
+      const batch = document.getElementById("batch").value;
+      const filtered = absentees.filter(s => s.Status === "Absent" || s.Status === "OD");
+      if (!filtered.length) return alert("No absent/OD records found for the selected date & batch.");
+
+      const header = ["RollNo","Name","Year","Section","Status","Reason"];
+      let csv = header.join(",") + "\n";
+      filtered.forEach(s => {
+        csv += [s.RollNo,s.Name,s.Year,s.Section,s.Status,s.Reason || ""].join(",") + "\n";
+      });
+
+      const blob = new Blob([csv],{type:"text/csv"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `Studentwise_Absent_OD_${hodDept}_${date}_${batch}.csv`;
+      a.click();
+    }
+
+    /* === Student History Popup === */
+    async function viewStudentHistory(){
+      const rollNo=document.getElementById("rollSearch").value.trim();
+      if(!rollNo) return alert("Enter Roll No");
+      const res=await fetch(SCRIPT_URL,{
+        method:"POST",
+        body: JSON.stringify({action:"getStudentHistory", rollNo})
+      });
+      const data=await res.json();
+      if(!data.success) return alert(data.message);
+
+      const records=data.records;
+      const body=document.getElementById("historyBody");
+      const title=document.getElementById("historyTitle");
+      const summary=document.getElementById("historySummary");
+      body.innerHTML="";
+      if(!records.length){
+        title.innerText=`No history found for ${rollNo}`;
+        document.getElementById("historyModal").style.display="flex";
+        return;
+      }
+      title.innerText=`History of ${rollNo}`;
+      let absentCount=0, odCount=0;
+      records.forEach(r=>{
+        if(r.Status==="Absent") absentCount++;
+        if(r.Status==="OD") odCount++;
+        body.innerHTML+=`<tr><td>${r.Date}</td><td>${r.Batch}</td><td>${r.Status}</td><td>${r.Reason||""}</td></tr>`;
+      });
+      summary.innerHTML=`Total: ${records.length} | Absent: ${absentCount} | OD: ${odCount}`;
+      document.getElementById("historyModal").style.display="flex";
+    }
+
+    function closeHistory(){
+      document.getElementById("historyModal").style.display="none";
+    }
+
+    /* === Faculty Users === */
+    async function loadFacultyUsers(){
+      const res = await fetch(SCRIPT_URL,{
+        method:"POST",
+        body: JSON.stringify({action:"getUsersByDept", department: hodDept, role:"Faculty"})
+      });
+      const data = await res.json();
+      if(!data.success) return alert(data.message);
+      const tbody=document.querySelector("#usersTable tbody");
+      tbody.innerHTML="";
+      data.users.forEach(u=>{
+        const tr=document.createElement("tr");
+        tr.innerHTML=`<td>${u.Email}</td><td>${u.Name}</td><td>${u.Role}</td>
+          <td><button class="btn" onclick="deleteUser('${u.Email}')">Delete</button></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function downloadUsersTemplate(){
+      const csv="Email,Password,Name,Role,Department,Year,Section\nexample@domain.com,123456,John Doe,Faculty,"+hodDept+",IV,C";
+      const blob=new Blob([csv],{type:"text/csv"});
+      const a=document.createElement("a");
+      a.href=URL.createObjectURL(blob);
+      a.download="UsersTemplate.csv";
+      a.click();
+    }
+
+    async function uploadUsers(){
+      const file=document.getElementById("usersFile").files[0];
+      if(!file) return alert("Select CSV file");
+      const text=await file.text();
+      const lines=text.split("\n").filter(l=>l.trim());
+      const users=lines.slice(1).map(l=>{
+        const [Email,Password,Name,Role,Department,Year,Section]=l.split(",");
+        return {Email,Password,Name,Role,Department,Year,Section};
+      });
+      const res=await fetch(SCRIPT_URL,{
+        method:"POST",
+        body: JSON.stringify({action:"uploadUsers", users})
+      });
+      const data=await res.json();
+      alert(data.message);
+      loadFacultyUsers();
+    }
+
+    async function deleteUser(email){
+      if(!confirm("Delete this user?")) return;
+      const res=await fetch(SCRIPT_URL,{
+        method:"POST",
+        body: JSON.stringify({action:"deleteUser", email})
+      });
+      const data=await res.json();
+      alert(data.message);
+      loadFacultyUsers();
+    }
+
+    /* === Students Upload === */
+    function downloadStudentsTemplate(){
+      const csv="RollNo,Name,ParentName,ParentPhone,Department,Year,Section\n101,John Doe,Jane Doe,9876543210,"+hodDept+",IV,C";
+      const blob=new Blob([csv],{type:"text/csv"});
+      const a=document.createElement("a");
+      a.href=URL.createObjectURL(blob);
+      a.download="StudentsTemplate.csv";
+      a.click();
+    }
+
+    async function uploadStudents(){
+      const file=document.getElementById("studentsFile").files[0];
+      if(!file) return alert("Select CSV file");
+      const text=await file.text();
+      const lines=text.split("\n").filter(l=>l.trim());
+      const students=lines.slice(1).map(l=>{
+        const [RollNo,Name,ParentName,ParentPhone,Department,Year,Section]=l.split(",");
+        return {RollNo,Name,ParentName,ParentPhone,Department,Year,Section};
+      });
+      const res=await fetch(SCRIPT_URL,{
+        method:"POST",
+        body: JSON.stringify({action:"uploadStudents", students})
+      });
+      const data=await res.json();
+      alert(data.message);
+    }
+
+  </script>
+</body>
+</html>
+
+
+
+
+
