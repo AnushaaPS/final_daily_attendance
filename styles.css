@@ -1,9 +1,6 @@
-/* ============================= */
 /* ===== Base Page Styling ===== */
-/* ============================= */
 html {
-  font-size: 16px;
-  scroll-behavior: smooth;
+  font-size: 16px; /* makes rem-based scaling consistent */
 }
 
 body {
@@ -13,7 +10,6 @@ body {
   padding: 20px;
   position: relative;
   line-height: 1.5;
-  color: #1f2937;
 }
 
 h2 {
@@ -21,18 +17,15 @@ h2 {
   color: #1e3a8a;
   margin: 0;
   padding-top: 10px;
-  font-size: 1.6rem;
-  font-weight: 600;
+  font-size: 1.5rem;
 }
 
-/* ============================= */
-/* ===== Logout Button ======== */
-/* ============================= */
+/* ===== Logout Button (Top Right) ===== */
 .logout-btn {
   position: absolute;
   top: 20px;
   right: 20px;
-  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  background: linear-gradient(135deg,#ef4444,#b91c1c);
   color: white;
   border: none;
   border-radius: 8px;
@@ -40,30 +33,24 @@ h2 {
   cursor: pointer;
   transition: transform 0.2s ease, background 0.2s ease;
   font-size: 1rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 .logout-btn:hover {
   transform: scale(1.05);
-  background: linear-gradient(135deg, #dc2626, #991b1b);
+  background: linear-gradient(135deg,#dc2626,#991b1b);
 }
 
-/* ============================= */
-/* ===== Section Card ======== */
-/* ============================= */
+/* ===== Section (Main Card) ===== */
 .section {
   background: white;
   padding: 25px;
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  max-width: 900px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  max-width: 700px;
   margin: 90px auto 30px;
   text-align: center;
-  transition: all 0.3s ease;
 }
 
-button,
-input,
-select {
+button, input, select {
   padding: 10px 14px;
   margin: 8px;
   border-radius: 6px;
@@ -73,73 +60,38 @@ select {
 }
 
 .btn {
-  background: linear-gradient(135deg, #2563eb, #1e40af);
+  background: linear-gradient(135deg,#2563eb,#1e40af);
   color: white;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
 }
 .btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* ============================= */
 /* ===== Scrollable Table ===== */
-/* ============================= */
 .table-container {
-  position: relative;
   overflow-x: auto;
   margin-top: 20px;
   border-radius: 10px;
-  scrollbar-width: thin;
-  scrollbar-color: #93c5fd transparent;
 }
-
-/* Add subtle shadow indicators for scroll */
-.table-container::before,
-.table-container::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 25px;
-  pointer-events: none;
-  z-index: 2;
-}
-.table-container::before {
-  left: 0;
-  background: linear-gradient(to right, rgba(243, 247, 255, 1), rgba(243, 247, 255, 0));
-}
-.table-container::after {
-  right: 0;
-  background: linear-gradient(to left, rgba(243, 247, 255, 1), rgba(243, 247, 255, 0));
-}
-
 table {
   border-collapse: collapse;
   width: 100%;
-  min-width: 600px;
+  min-width: 500px;
 }
-th,
-td {
-  border: 1px solid #e5e7eb;
+th, td {
+  border: 1px solid #ddd;
   padding: 10px;
   text-align: center;
 }
 th {
   background-color: #1e3a8a;
   color: white;
-  font-weight: 600;
-}
-td {
-  background-color: white;
 }
 
-/* ============================= */
 /* ===== Status Cards Grid ===== */
-/* ============================= */
 .status-grid {
   display: flex;
   flex-wrap: wrap;
@@ -154,15 +106,9 @@ td {
   min-width: 120px;
   text-align: center;
   font-weight: 600;
-  transition: transform 0.2s ease;
-}
-.status-card:hover {
-  transform: translateY(-3px);
 }
 
-/* ============================= */
 /* ===== Footer ===== */
-/* ============================= */
 footer {
   text-align: center;
   color: #555;
@@ -176,7 +122,7 @@ footer {
 #popupOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -185,35 +131,24 @@ footer {
 
 #popupBox {
   background: white;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 25px;
-  width: 70%;
-  max-width: 950px;
+  width: 80%;
+  max-width: 800px;
   max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
   position: relative;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
 }
 
 #popupBox h3 {
   color: #1e3a8a;
   text-align: center;
   margin: 0 0 10px;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
 }
 
+/* Close Button */
 #popupBox .close-btn {
   position: absolute;
   top: 12px;
@@ -233,18 +168,6 @@ footer {
 /* ============================= */
 /* ===== Responsive Design ===== */
 /* ============================= */
-@media (max-width: 992px) {
-  .section {
-    max-width: 90%;
-    padding: 20px;
-  }
-
-  #popupBox {
-    width: 90%;
-    max-height: 80vh;
-  }
-}
-
 @media (max-width: 768px) {
   body {
     padding: 10px;
@@ -261,9 +184,7 @@ footer {
     padding: 18px;
   }
 
-  button,
-  input,
-  select {
+  button, input, select {
     width: 100%;
     margin: 6px 0;
     font-size: 0.95rem;
@@ -283,9 +204,10 @@ footer {
 
   table {
     font-size: 0.9rem;
-    min-width: 500px;
+    min-width: 400px;
   }
 
+  /* Popup adjustments for tablets & phones */
   #popupBox {
     width: 95%;
     max-height: 80vh;
@@ -297,6 +219,13 @@ footer {
     font-size: 1rem;
   }
 
+  #popupBox .close-btn {
+    top: 8px;
+    right: 8px;
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+
   .status-card {
     min-width: 100px;
     font-size: 0.9rem;
@@ -304,69 +233,28 @@ footer {
   }
 }
 
-/* ===== Mobile View (Phones) ===== */
+/* ===== Extra small screens (phones <480px) ===== */
 @media (max-width: 480px) {
   html {
-    font-size: 15px;
+    font-size: 15px; /* slightly larger for readability */
   }
 
   .section {
     padding: 15px;
   }
 
-  button,
-  input,
-  select {
+  button, input, select {
     font-size: 1rem;
     padding: 9px 12px;
   }
 
   #popupBox {
     width: 96%;
-    padding: 14px;
+    padding: 12px;
     max-height: 78vh;
-    border-radius: 10px;
   }
 
   #popupBox h3 {
     font-size: 1rem;
-  }
-
-  /* ===== Table as Card Dropdowns ===== */
-  table,
-  thead,
-  tbody,
-  th,
-  td,
-  tr {
-    display: block;
-  }
-
-  thead tr {
-    display: none;
-  }
-
-  tr {
-    margin-bottom: 1rem;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
-    padding: 10px;
-  }
-
-  td {
-    border: none;
-    display: flex;
-    justify-content: space-between;
-    text-align: right;
-    padding: 8px 10px;
-    font-size: 0.95rem;
-  }
-
-  td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    text-align: left;
-    color: #1e3a8a;
   }
 }
