@@ -3,6 +3,7 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HoD Dashboard – Attendance & Management</title>
+  <button class="btn" onclick="logout()">Logout</button>
   <script src="common.js"></script>
   <link rel="stylesheet" href="styles.css">
   <style>
@@ -52,7 +53,7 @@
       <button class="btn" onclick="loadSummary()">Load Summary</button>
       <button class="btn" onclick="downloadSummaryCSV()">Download Class Summary</button>
       <button class="btn" onclick="downloadStudentwiseCSV()">Download Studentwise Report</button>
-      <button class="btn" onclick="logout()">Logout</button>
+      
     </div>
     <div id="summaryGrid"></div>
   </div>
@@ -338,6 +339,7 @@ function downloadSummaryCSV() {
   </script>
 </body>
 </html>
+
 
 
 
