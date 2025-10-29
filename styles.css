@@ -1,9 +1,6 @@
-/* ============================= */
 /* ===== Base Page Styling ===== */
-/* ============================= */
 html {
-  font-size: 16px; /* Base rem scaling */
-  scroll-behavior: smooth;
+  font-size: 16px; /* makes rem-based scaling consistent */
 }
 
 body {
@@ -11,54 +8,44 @@ body {
   background: #f3f7ff;
   margin: 0;
   padding: 20px;
-  line-height: 1.5;
-  color: #111827;
   position: relative;
+  line-height: 1.5;
 }
 
-/* ============================= */
-/* ===== Page Title ===== */
-/* ============================= */
 h2 {
   text-align: center;
   color: #1e3a8a;
   margin: 0;
   padding-top: 10px;
-  font-size: 1.6rem;
-  letter-spacing: 0.5px;
+  font-size: 1.5rem;
 }
 
-/* ============================= */
-/* ===== Logout Button ===== */
-/* ============================= */
+/* ===== Logout Button (Top Right) ===== */
 .logout-btn {
   position: absolute;
   top: 20px;
   right: 20px;
   background: linear-gradient(135deg,#ef4444,#b91c1c);
-  color: #fff;
+  color: white;
   border: none;
   border-radius: 8px;
   padding: 8px 16px;
   cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
   font-size: 1rem;
-  font-weight: 500;
-  transition: all 0.2s ease-in-out;
 }
 .logout-btn:hover {
   transform: scale(1.05);
   background: linear-gradient(135deg,#dc2626,#991b1b);
 }
 
-/* ============================= */
-/* ===== Section / Main Card ===== */
-/* ============================= */
+/* ===== Section (Main Card) ===== */
 .section {
-  background: #fff;
+  background: white;
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  max-width: 800px;
+  max-width: 700px;
   margin: 90px auto 30px;
   text-align: center;
 }
@@ -70,7 +57,6 @@ button, input, select {
   border: 1px solid #ccc;
   font-size: 1rem;
   width: auto;
-  outline: none;
 }
 
 .btn {
@@ -78,78 +64,51 @@ button, input, select {
   color: white;
   border: none;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease;
 }
 .btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
-/* ============================= */
 /* ===== Scrollable Table ===== */
-/* ============================= */
 .table-container {
   overflow-x: auto;
   margin-top: 20px;
   border-radius: 10px;
-  scrollbar-width: thin;
-  scrollbar-color: #2563eb #f3f7ff;
 }
-.table-container::-webkit-scrollbar {
-  height: 6px;
-}
-.table-container::-webkit-scrollbar-thumb {
-  background: #2563eb;
-  border-radius: 3px;
-}
-
 table {
   border-collapse: collapse;
   width: 100%;
-  min-width: 600px;
-  background: white;
+  min-width: 500px;
 }
 th, td {
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ddd;
   padding: 10px;
   text-align: center;
-  white-space: nowrap;
 }
 th {
   background-color: #1e3a8a;
   color: white;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-}
-tr:nth-child(even) {
-  background: #f9fafb;
 }
 
-/* ============================= */
 /* ===== Status Cards Grid ===== */
-/* ============================= */
 .status-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   justify-content: center;
-  margin-top: 15px;
 }
 .status-card {
   background: #f9f9ff;
   border-left: 6px solid gray;
   padding: 10px 15px;
   border-radius: 8px;
-  min-width: 140px;
+  min-width: 120px;
   text-align: center;
   font-weight: 600;
-  color: #1e3a8a;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-/* ============================= */
 /* ===== Footer ===== */
-/* ============================= */
 footer {
   text-align: center;
   color: #555;
@@ -158,30 +117,28 @@ footer {
 }
 
 /* ============================= */
-/* ===== Popup Styling ===== */
+/* ===== Popup Styling ======== */
 /* ============================= */
 #popupOverlay {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.5);
-  display: none; /* hidden until opened */
+  display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  animation: fadeIn 0.3s ease;
 }
 
 #popupBox {
   background: white;
   border-radius: 12px;
   padding: 25px;
-  width: 85%;
+  width: 80%;
   max-width: 800px;
   max-height: 85vh;
   overflow-y: auto;
   box-shadow: 0 2px 10px rgba(0,0,0,0.3);
   position: relative;
-  animation: slideIn 0.3s ease;
 }
 
 #popupBox h3 {
@@ -208,35 +165,9 @@ footer {
   background: #b91c1c;
 }
 
-/* Popup Animation */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes slideIn {
-  from { transform: translateY(-20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
 /* ============================= */
 /* ===== Responsive Design ===== */
 /* ============================= */
-@media (max-width: 992px) {
-  .section {
-    max-width: 90%;
-    margin: 70px auto 25px;
-  }
-
-  th, td {
-    font-size: 0.95rem;
-    padding: 8px;
-  }
-
-  .status-card {
-    min-width: 120px;
-  }
-}
-
 @media (max-width: 768px) {
   body {
     padding: 10px;
@@ -249,8 +180,8 @@ footer {
 
   .section {
     width: 95%;
-    padding: 18px;
     margin: 70px auto 20px;
+    padding: 18px;
   }
 
   button, input, select {
@@ -261,6 +192,7 @@ footer {
 
   .btn {
     width: 100%;
+    margin-top: 8px;
   }
 
   .logout-btn {
@@ -270,15 +202,12 @@ footer {
     font-size: 0.85rem;
   }
 
-  .table-container {
-    border-radius: 6px;
-  }
-
   table {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     min-width: 400px;
   }
 
+  /* Popup adjustments for tablets & phones */
   #popupBox {
     width: 95%;
     max-height: 80vh;
@@ -287,7 +216,7 @@ footer {
   }
 
   #popupBox h3 {
-    font-size: 1.05rem;
+    font-size: 1rem;
   }
 
   #popupBox .close-btn {
@@ -304,22 +233,18 @@ footer {
   }
 }
 
-/* ===== Extra Small Screens (Phones <480px) ===== */
+/* ===== Extra small screens (phones <480px) ===== */
 @media (max-width: 480px) {
   html {
     font-size: 15px; /* slightly larger for readability */
   }
 
-  h2 {
-    font-size: 1.15rem;
-  }
-
   .section {
-    padding: 14px;
+    padding: 15px;
   }
 
   button, input, select {
-    font-size: 0.95rem;
+    font-size: 1rem;
     padding: 9px 12px;
   }
 
@@ -331,14 +256,5 @@ footer {
 
   #popupBox h3 {
     font-size: 1rem;
-  }
-
-  .logout-btn {
-    padding: 5px 10px;
-    font-size: 0.8rem;
-  }
-
-  table {
-    min-width: 350px;
   }
 }
