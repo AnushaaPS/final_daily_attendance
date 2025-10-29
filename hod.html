@@ -3,7 +3,6 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HoD Dashboard – Attendance & Management</title>
-  <button class="btn" onclick="logout()">Logout</button>
   <script src="common.js"></script>
   <link rel="stylesheet" href="styles.css">
   <style>
@@ -38,7 +37,7 @@
 <body onload="initHOD()">
 
   <h2>HoD Dashboard – Department: <span id="hodDept"></span></h2>
-
+  <button class="btn" onclick="logout()">Logout</button>
   <!-- Attendance Summary -->
   <div class="section">
     <h3>Attendance Summary</h3>
@@ -339,6 +338,7 @@ function downloadSummaryCSV() {
   </script>
 </body>
 </html>
+
 
 
 
