@@ -59,7 +59,6 @@
 
 <body onload="initFaculty()">
   <h2>Faculty Dashboard – Absentees & OD</h2>
-  <button class="btn" onclick="logout()">Logout</button>
   <div id="welcome" style="text-align:center; margin-bottom: 15px; font-weight:600;"></div>
 
   <div class="filters">
@@ -71,6 +70,7 @@
       </select>
     </label>
     <button class="btn" onclick="loadAbsentees()">Load</button>
+    <button class="btn" onclick="logout()">Logout</button>
   </div>
 
   <div id="facultySectionInfo" 
@@ -174,6 +174,7 @@
   if (!data.success) return alert(data.message);
 
   absentees = data.records || data.data || [];
+  window._facultyClassList = data.fullClass || [];
 
   renderTable(isLocked);
   renderSummary();
@@ -191,43 +192,45 @@
 
     function renderSummary() {
   const summaryDiv = document.getElementById("summary");
-  summaryDiv.innerHTML = ""; // clear previous content
-
-  if (!absentees.length) {
-    summaryDiv.innerHTML = "No records found for the selected date and batch.";
+  const classList = window._facultyClassList || [];
+  if (!classList.length) {
+    summaryDiv.innerHTML = "No class data available.";
     return;
   }
 
-  // Group by Year+Section
+  // Build totals
   const classMap = {};
-  absentees.forEach(s => {
+  classList.forEach(s => {
     const key = `${s.Year} ${s.Section}`;
-    if (!classMap[key]) classMap[key] = { total: 0, present: 0, absent: 0 };
-    classMap[key].total += 1;
-    if (s.Status === "Absent" || s.Status === "OD") classMap[key].absent += 1;
-    else classMap[key].present += 1;
+    if (!classMap[key]) classMap[key] = { total: 0, absent: 0 };
+    classMap[key].total++;
   });
 
-  // Build grid HTML
+  absentees.forEach(s => {
+    const key = `${s.Year} ${s.Section}`;
+    if (classMap[key]) classMap[key].absent++;
+  });
+
+  // Build summary grid
   let html = '<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:15px;">';
   for (const key in classMap) {
     const [year, section] = key.split(" ");
     const c = classMap[key];
-    const percent = ((c.present / c.total) * 100).toFixed(2);
-
+    const present = c.total - c.absent;
+    const percent = ((present / c.total) * 100).toFixed(2);
     html += `
       <div style="background:white; padding:15px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); width:180px; text-align:center;">
         <h4 style="margin:0 0 8px 0; color:#1e3a8a;">${year} ${section}</h4>
-        <p style="margin:4px 0;"><strong>Total:</strong> ${c.total}</p>
-        <p style="margin:4px 0; color:green;"><strong>Present:</strong> ${c.present}</p>
-        <p style="margin:4px 0; color:red;"><strong>Absent/OD:</strong> ${c.absent}</p>
-        <p style="margin:4px 0;"><strong>Attendance %:</strong> ${percent}%</p>
-      </div>
-    `;
+        <p><strong>Total:</strong> ${c.total}</p>
+        <p style="color:green;"><strong>Present:</strong> ${present}</p>
+        <p style="color:red;"><strong>Absent/OD:</strong> ${c.absent}</p>
+        <p><strong>Attendance %:</strong> ${percent}%</p>
+      </div>`;
   }
-  html += '</div>';
+  html += "</div>";
   summaryDiv.innerHTML = html;
 }
+
 
 
     function renderTable(isLocked = false) {
@@ -365,6 +368,4 @@ function closeCall() {
   </script>
 </body>
 </html>
-
-
 
