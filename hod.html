@@ -37,7 +37,7 @@
 <body onload="initHOD()">
 
   <h2>HoD Dashboard – Department: <span id="hodDept"></span></h2>
-  <button class="btn" onclick="logout()">Logout</button>
+
   <!-- Attendance Summary -->
   <div class="section">
     <h3>Attendance Summary</h3>
@@ -52,7 +52,7 @@
       <button class="btn" onclick="loadSummary()">Load Summary</button>
       <button class="btn" onclick="downloadSummaryCSV()">Download Class Summary</button>
       <button class="btn" onclick="downloadStudentwiseCSV()">Download Studentwise Report</button>
-      
+      <button class="btn" onclick="logout()">Logout</button>
     </div>
     <div id="summaryGrid"></div>
   </div>
@@ -112,89 +112,91 @@
     }
 
     /* === Load Attendance Summary === */
-    async function loadSummary() {
-      const date = document.getElementById("date").value;
-      const batch = document.getElementById("batch").value;
-      if(!date) return alert("Select a date");
+let summaryData = {}; // ✅ global variable to store the same summary shown on screen
 
-      const res = await fetch(SCRIPT_URL, {
-        method:"POST",
-        body: JSON.stringify({action:"getAbsenteesForHoD", department: hodDept, date, batch})
-      });
-      const data = await res.json();
-      if(!data.success) return alert(data.message);
+/* === Load Attendance Summary === */
+async function loadSummary() {
+  const date = document.getElementById("date").value;
+  const batch = document.getElementById("batch").value;
+  if (!date) return alert("Select a date");
 
-      absentees = data.records;
-      renderSummaryGrid();
-    }
-
-    /* === Render Grid === */
-    function renderSummaryGrid() {
-      const summaryDiv = document.getElementById("summaryGrid");
-      summaryDiv.innerHTML = "";
-      if(!absentees.length) { summaryDiv.innerText = "No records found."; return; }
-
-      const classMap = {};
-      absentees.forEach(s=>{
-        const key = `${s.Year} ${s.Section}`;
-        if(!classMap[key]) classMap[key]={total:0,present:0,absent:0};
-        classMap[key].total+=1;
-        if(s.Status==='Absent'||s.Status==='OD') classMap[key].absent+=1;
-        else classMap[key].present+=1;
-      });
-
-      for(const key in classMap){
-        const [year,section]=key.split(" ");
-        const c=classMap[key];
-        const percent=((c.present/c.total)*100).toFixed(2);
-        const card = document.createElement("div");
-        card.className="card";
-        card.innerHTML=`<h4>${year} ${section}</h4>
-                        <p><strong>Total:</strong>${c.total}</p>
-                        <p style="color:green;"><strong>Present:</strong>${c.present}</p>
-                        <p style="color:red;"><strong>Absent/OD:</strong>${c.absent}</p>
-                        <p><strong>Attendance %:</strong>${percent}%</p>`;
-        summaryDiv.appendChild(card);
-      }
-    }
-
-    /* === Download Class Summary CSV (Updated) === */
-function downloadSummaryCSV() {
-  if (!absentees.length) return alert("No records to download");
-
-  // Step 1: Build class-wise summary same as renderSummaryGrid()
-  const classMap = {};
-  absentees.forEach(s => {
-    const key = `${s.Year} ${s.Section}`;
-    if (!classMap[key]) classMap[key] = { total: 0, present: 0, absent: 0 };
-    classMap[key].total += 1;
-    if (s.Status === "Absent" || s.Status === "OD") classMap[key].absent += 1;
-    else classMap[key].present += 1;
+  const res = await fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "getAbsenteesForHoD",
+      department: hodDept,
+      date,
+      batch,
+    }),
   });
+  const data = await res.json();
+  if (!data.success) return alert(data.message);
 
-  // Step 2: Create CSV header
+  // store records and summary from server
+  absentees = data.records || [];
+  summaryData = data.summary || {};   // <--- use server-provided summary
+  renderSummaryGrid(summaryData);
+}
+
+/* === Render Summary Grid === */
+function renderSummaryGrid(summary) {
+  const div = document.getElementById("summaryGrid");
+  div.innerHTML = "";
+
+  if (!summary || Object.keys(summary).length === 0) {
+    div.innerHTML =
+      `<div style="color:red; text-align:center;">No records found for the selected date & batch.</div>`;
+    return;
+  }
+
+  Object.entries(summary).forEach(([key, s]) => {
+    const [year, section] = key.split("_");
+    const total = s.total || 0;
+    const present = s.present || 0;
+    const absent = s.absent || 0;
+    const percent = total > 0 ? ((present / total) * 100).toFixed(2) : "0.00";
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <h4>${year} ${section}</h4>
+      <p><strong>Total:</strong> ${total}</p>
+      <p style="color:green;"><strong>Present:</strong> ${present}</p>
+      <p style="color:red;"><strong>Absent/OD:</strong> ${absent}</p>
+      <p><strong>Attendance %:</strong> ${percent}%</p>
+    `;
+    div.appendChild(card);
+  });
+}
+
+/* === Download Same Summary Grid as CSV === */
+function downloadSummaryCSV() {
+  const date = document.getElementById("date").value;
+  const batch = document.getElementById("batch").value;
+  if (!date || !batch) return alert("Please select both date and batch!");
+  if (!summaryData || Object.keys(summaryData).length === 0)
+    return alert("No summary data to download.");
+
+  // ✅ Prepare CSV exactly like renderSummaryGrid
   const header = ["Year", "Section", "Total Students", "Present", "Absent/OD", "Attendance %"];
   let csv = header.join(",") + "\n";
 
-  // Step 3: Add each class summary as a row
-  for (const key in classMap) {
-    const [year, section] = key.split(" ");
-    const c = classMap[key];
-    const percent = ((c.present / c.total) * 100).toFixed(2);
-    csv += [year, section, c.total, c.present, c.absent, `${percent}%`].join(",") + "\n";
-  }
+  Object.entries(summaryData).forEach(([key, c]) => {
+    const [year, section] = key.split("_");
+    const total = c.total;
+    const present = c.present;
+    const absent = c.absent;
+    const percent = total > 0 ? ((present / total) * 100).toFixed(2) : "0.00";
+    csv += [year, section, total, present, absent, `${percent}%`].join(",") + "\n";
+  });
 
-  // Step 4: Trigger file download
-  const date = document.getElementById("date").value || "UnknownDate";
-  const batch = document.getElementById("batch").value || "FN";
+  // ✅ Download CSV
   const blob = new Blob([csv], { type: "text/csv" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = `ClassSummary_${hodDept}_${date}_${batch}.csv`;
   a.click();
 }
-
-
     /* === Download Studentwise Absent/OD CSV === */
     function downloadStudentwiseCSV() {
       if(!absentees.length) return alert("No data to download");
@@ -338,9 +340,6 @@ function downloadSummaryCSV() {
   </script>
 </body>
 </html>
-
-
-
 
 
 
