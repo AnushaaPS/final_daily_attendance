@@ -346,7 +346,7 @@
     console.error("Lock check failed:", err);
   }
 
-  // --- Fetch data anyway (for view mode) ---
+  // --- Fetch data ---
   const res = await fetch(SCRIPT_URL, {
     method: "POST",
     body: JSON.stringify({
@@ -358,7 +358,14 @@
   });
 
   const data = await res.json();
-  if (!data.success) return alert(data.message);
+
+  if (!data.success || (!data.records && !data.fullClass?.length)) {
+    document.querySelector("#dataTable tbody").innerHTML =
+      `<tr><td colspan="7" style="text-align:center; color:#999;">No data found for selected date & batch.</td></tr>`;
+    document.getElementById("summary").innerHTML =
+      `<p style="text-align:center; color:#999;">No data found for selected date & batch.</p>`;
+    return;
+  }
 
   absentees = data.records || data.data || [];
   window._facultyClassList = data.fullClass || [];
@@ -366,51 +373,93 @@
   renderTable(isLocked);
   renderSummary();
 
-  // --- Display section info ---
   document.getElementById("facultySectionInfo").innerText =
     `Loaded: ${data.department || user.department} - ${data.year || user.year} ${data.section || user.section}`;
 
-  // --- Disable or enable save button based on lock ---
   const saveBtn = document.querySelector(".save");
   saveBtn.disabled = isLocked;
   saveBtn.style.opacity = isLocked ? "0.6" : "1.0";
 }
 
+function renderTable(isLocked = false) {
+  const tbody = document.querySelector("#dataTable tbody");
+  tbody.innerHTML = "";
 
-    function renderSummary() {
-  const summaryDiv = document.getElementById("summary");
-  const classList = window._facultyClassList || [];
-  if (!classList.length) {
-    summaryDiv.innerHTML = "No class data available.";
+  if (!absentees.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#999;">No data found for selected date & batch.</td></tr>`;
     return;
   }
 
-  // Build totals
+  absentees.forEach((s, i) => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${s.RollNo}</td>
+        <td>${s.Name}</td>
+        <td>${s.Year}</td>
+        <td>${s.Section}</td>
+        <td>
+          ${
+            isLocked
+              ? `<span>${s.Status}</span>`
+              : `<select onchange="absentees[${i}].Status=this.value">
+                   <option ${s.Status==='Absent'?'selected':''}>Absent</option>
+                   <option ${s.Status==='OD'?'selected':''}>OD</option>
+                 </select>`
+          }
+        </td>
+        <td>
+          ${
+            isLocked
+              ? `<span>${s.Reason || '-'}</span>`
+              : `<input type="text" value="${s.Reason||''}" onchange="absentees[${i}].Reason=this.value" style="width:120px;">`
+          }
+        </td>
+        <td>
+          <button class="btn" onclick="viewHistory('${s.RollNo}','${s.Name}')">History</button>
+          <button class="btn" onclick="callParent('${s.ParentPhone||''}', ${i})">Call</button>
+          ${!isLocked ? `<button class="btn" onclick="editParent(${i})">Edit</button>` : ''}
+        </td>
+      </tr>`;
+  });
+}
+
+function renderSummary() {
+  const summaryDiv = document.getElementById("summary");
+  const classList = window._facultyClassList || [];
+  if (!classList.length) {
+    summaryDiv.innerHTML = `<p style="text-align:center; color:#999;">No data found for selected date & batch.</p>`;
+    return;
+  }
+
   const classMap = {};
   classList.forEach(s => {
     const key = `${s.Year} ${s.Section}`;
-    if (!classMap[key]) classMap[key] = { total: 0, absent: 0 };
+    if (!classMap[key]) classMap[key] = { total: 0, absent: 0, od: 0 };
     classMap[key].total++;
   });
 
   absentees.forEach(s => {
     const key = `${s.Year} ${s.Section}`;
-    if (classMap[key]) classMap[key].absent++;
+    if (classMap[key]) {
+      if (s.Status === "Absent") classMap[key].absent++;
+      if (s.Status === "OD") classMap[key].od++;
+    }
   });
 
-  // Build summary grid
   let html = '<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:15px;">';
   for (const key in classMap) {
     const [year, section] = key.split(" ");
     const c = classMap[key];
-    const present = c.total - c.absent;
+    const present = c.total - (c.absent + c.od);
     const percent = ((present / c.total) * 100).toFixed(2);
+
     html += `
-      <div style="background:white; padding:15px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); width:180px; text-align:center;">
+      <div style="background:white; padding:15px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); width:200px; text-align:center;">
         <h4 style="margin:0 0 8px 0; color:#1e3a8a;">${year} ${section}</h4>
         <p><strong>Total:</strong> ${c.total}</p>
         <p style="color:green;"><strong>Present:</strong> ${present}</p>
-        <p style="color:red;"><strong>Absent/OD:</strong> ${c.absent}</p>
+        <p style="color:#e11d48;"><strong>Absentees:</strong> ${c.absent}</p>
+        <p style="color:#f59e0b;"><strong>OD:</strong> ${c.od}</p>
         <p><strong>Attendance %:</strong> ${percent}%</p>
       </div>`;
   }
