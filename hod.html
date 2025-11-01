@@ -4,7 +4,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HoD Dashboard – Attendance & Management</title>
   <script src="common.js"></script>
-  
+  <link rel="stylesheet" href="styles.css">
   <style>
     body { font-family: 'Segoe UI', sans-serif; background:#f5f8ff; margin:0; padding:20px; }
     h2 { text-align:center; color:#1e3a8a; }
@@ -120,22 +120,31 @@ async function loadSummary() {
   const batch = document.getElementById("batch").value;
   if (!date) return alert("Select a date");
 
-  const res = await fetch(SCRIPT_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      action: "getAbsenteesForHoD",
-      department: hodDept,
-      date,
-      batch,
-    }),
-  });
-  const data = await res.json();
-  if (!data.success) return alert(data.message);
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "getAbsenteesForHoD",
+        department: hodDept,
+        date, batch
+      }),
+    });
+    const data = await res.json();
 
-  // store records and summary from server
-  absentees = data.records || [];
-  summaryData = data.summary || {};   // <--- use server-provided summary
-  renderSummaryGrid(summaryData);
+    if (!data || !data.success) {
+      document.getElementById("summaryGrid").innerHTML =
+        `<div style="color:red;text-align:center;">${data.message || "No attendance data found for this date & batch."}</div>`;
+      return;
+    }
+
+    absentees = data.records || [];
+    summaryData = data.summary || {};
+    renderSummaryGrid(summaryData);
+
+  } catch (err) {
+    console.error(err);
+    alert("Error loading summary. Please check your internet or backend script.");
+  }
 }
 
 /* === Render Summary Grid === */
@@ -144,8 +153,7 @@ function renderSummaryGrid(summary) {
   div.innerHTML = "";
 
   if (!summary || Object.keys(summary).length === 0) {
-    div.innerHTML =
-      `<div style="color:red; text-align:center;">No records found for the selected date & batch.</div>`;
+    div.innerHTML = `<div style="color:red; text-align:center;">No data found.</div>`;
     return;
   }
 
@@ -154,6 +162,7 @@ function renderSummaryGrid(summary) {
     const total = s.total || 0;
     const present = s.present || 0;
     const absent = s.absent || 0;
+    const od = s.od || 0;
     const percent = total > 0 ? ((present / total) * 100).toFixed(2) : "0.00";
 
     const card = document.createElement("div");
@@ -162,14 +171,15 @@ function renderSummaryGrid(summary) {
       <h4>${year} ${section}</h4>
       <p><strong>Total:</strong> ${total}</p>
       <p style="color:green;"><strong>Present:</strong> ${present}</p>
-      <p style="color:red;"><strong>Absent/OD:</strong> ${absent}</p>
+      <p style="color:red;"><strong>Absent:</strong> ${absent}</p>
+      <p style="color:#eab308;"><strong>OD:</strong> ${od}</p>
       <p><strong>Attendance %:</strong> ${percent}%</p>
     `;
     div.appendChild(card);
   });
 }
 
-/* === Download Same Summary Grid as CSV === */
+/* === Download Class Summary CSV === */
 function downloadSummaryCSV() {
   const date = document.getElementById("date").value;
   const batch = document.getElementById("batch").value;
@@ -177,46 +187,59 @@ function downloadSummaryCSV() {
   if (!summaryData || Object.keys(summaryData).length === 0)
     return alert("No summary data to download.");
 
-  // ✅ Prepare CSV exactly like renderSummaryGrid
-  const header = ["Year", "Section", "Total Students", "Present", "Absent/OD", "Attendance %"];
+  const header = ["Year","Section","Total Students","Present","Absent","OD","Attendance %"];
   let csv = header.join(",") + "\n";
 
   Object.entries(summaryData).forEach(([key, c]) => {
     const [year, section] = key.split("_");
-    const total = c.total;
-    const present = c.present;
-    const absent = c.absent;
+    const total = c.total || 0;
+    const present = c.present || 0;
+    const absent = c.absent || 0;
+    const od = c.od || 0;
     const percent = total > 0 ? ((present / total) * 100).toFixed(2) : "0.00";
-    csv += [year, section, total, present, absent, `${percent}%`].join(",") + "\n";
+    csv += [year, section, total, present, absent, od, `${percent}%`].join(",") + "\n";
   });
 
-  // ✅ Download CSV
   const blob = new Blob([csv], { type: "text/csv" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = `ClassSummary_${hodDept}_${date}_${batch}.csv`;
   a.click();
 }
-    /* === Download Studentwise Absent/OD CSV === */
-    function downloadStudentwiseCSV() {
-      if(!absentees.length) return alert("No data to download");
-      const date = document.getElementById("date").value;
-      const batch = document.getElementById("batch").value;
-      const filtered = absentees.filter(s => s.Status === "Absent" || s.Status === "OD");
-      if (!filtered.length) return alert("No absent/OD records found for the selected date & batch.");
 
-      const header = ["RollNo","Name","Year","Section","Status","Reason"];
-      let csv = header.join(",") + "\n";
-      filtered.forEach(s => {
-        csv += [s.RollNo,s.Name,s.Year,s.Section,s.Status,s.Reason || ""].join(",") + "\n";
-      });
+/* === Download Studentwise Absent/OD CSV === */
+function downloadStudentwiseCSV() {
+  if (!absentees.length) return alert("No data to download");
+  const date = document.getElementById("date").value;
+  const batch = document.getElementById("batch").value;
+  const filtered = absentees.filter(
+    (s) => s.Status === "Absent" || s.Status === "OD"
+  );
+  if (!filtered.length)
+    return alert("No absent/OD records found for the selected date & batch.");
 
-      const blob = new Blob([csv],{type:"text/csv"});
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `Studentwise_Absent_OD_${hodDept}_${date}_${batch}.csv`;
-      a.click();
-    }
+  const header = [
+    "RollNo",
+    "Name",
+    "Year",
+    "Section",
+    "Status",
+    "Reason",
+  ];
+  let csv = header.join(",") + "\n";
+  filtered.forEach((s) => {
+    csv +=
+      [s.RollNo, s.Name, s.Year, s.Section, s.Status, s.Reason || ""].join(
+        ","
+      ) + "\n";
+  });
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `Studentwise_Absent_OD_${hodDept}_${date}_${batch}.csv`;
+  a.click();
+}
 
     /* === Student History Popup === */
     async function viewStudentHistory(){
@@ -340,8 +363,3 @@ function downloadSummaryCSV() {
   </script>
 </body>
 </html>
-
-
-
-
-
