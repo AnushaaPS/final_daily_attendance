@@ -1,122 +1,309 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Faculty Dashboard - Absentees & OD</title>
-  <script src="common.js"></script>
-  
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f5f8ff;
-      margin: 0;
-      padding: 20px;
-    }
-    h2 { color: #1e3a8a; text-align: center; }
-    .filters { text-align: center; margin-bottom: 20px; }
-    input, select, button {
-      padding: 8px; margin: 5px; border-radius: 6px; border: 1px solid #ccc;
-    }
-    .btn {
-      background: linear-gradient(135deg, #2563eb, #1e40af);
-      color: white; padding: 6px 10px; border: none;
-      border-radius: 6px; cursor: pointer; font-weight: 600;
-      transition: 0.2s;
-    }
-    .btn:hover { transform: scale(1.05); }
-    table {
-      width: 100%; border-collapse: collapse; background: white;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-    }
-    th, td {
-      padding: 10px; border-bottom: 1px solid #ddd; text-align: center;
-    }
-    th { background: #1e3a8a; color: white; }
-    tr:hover { background: #eef3ff; }
-    button.save {
-      background: #2563eb; color: white; border: none;
-      padding: 10px 16px; border-radius: 6px; cursor: pointer;
-      display: block; margin: 20px auto;
-    }
-    /* Modal styles */
-    .modal {
-      display:none; position:fixed; z-index:10; left:0; top:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.5); justify-content:center; align-items:center;
-    }
-    .modal-content {
-      background:white; padding:20px; border-radius:10px; width:400px;
-      box-shadow:0 2px 10px rgba(0,0,0,0.3);
-    }
-    .close-btn {
-      background:red; color:white; border:none; border-radius:5px; padding:5px 10px;
-      float:right; cursor:pointer;
-    }
-    .summary-box {
-      text-align:center; margin-top:10px; font-weight:600;
-    }
-  </style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Faculty Dashboard - Absentees & OD</title>
+<script src="common.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(180deg, #f5f8ff, #eef3ff);
+    margin: 0; padding: 0;
+  }
+  header {
+    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    color: white;
+    padding: 15px 10px;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    flex-wrap: wrap;
+  }
+  .top-bar button {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .filters {
+    text-align: center;
+    padding: 15px;
+  }
+  input, select {
+    padding: 8px;
+    margin: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+  }
+  .btn {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+  }
+  .btn:hover { transform: scale(1.05); }
+
+  table {
+    width: 95%;
+    margin: 15px auto;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  th, td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  th {
+    background: #1e3a8a;
+    color: white;
+    font-size: 15px;
+  }
+  tr:hover { background: #f1f5ff; }
+
+  button.save {
+    display: block;
+    margin: 20px auto;
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+  }
+  button.save:hover { background: #1d4ed8; transform: scale(1.05); }
+
+  #summary {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+  }
+  .summary-card {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    width: 180px;
+    text-align: center;
+  }
+
+  /* Modals */
+  .modal {
+    display:none;
+    position:fixed;
+    z-index:10;
+    left:0; top:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.4);
+    justify-content:center;
+    align-items:center;
+  }
+  .modal-content {
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    width:90%;
+    max-width:420px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.3);
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .close-btn {
+    background:red;
+    color:white;
+    border:none;
+    border-radius:5px;
+    padding:5px 10px;
+    float:right;
+    cursor:pointer;
+  }
+
+  /* Mobile Responsive */
+@media (max-width: 768px) {
+
+  /* Apply mobile card view ONLY to main attendance table */
+  .btn {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+  }
+
+  .btn:hover {
+    background: #1e40af;
+    transform: translateY(-2px);
+  }
+
+  #dataTable, 
+  #dataTable thead, 
+  #dataTable tbody, 
+  #dataTable th, 
+  #dataTable td, 
+  #dataTable tr {
+    display: block;
+  }
+
+  #dataTable thead tr { display: none; }
+
+  #dataTable td {
+    position: relative;
+    padding-left: 50%;
+    text-align: left;
+  }
+
+  #dataTable td:before {
+    position: absolute;
+    left: 10px;
+    width: 45%;
+    font-weight: 600;
+    color: #1e3a8a;
+    white-space: nowrap;
+  }
+
+  #dataTable td:nth-of-type(1):before { content: "Roll No"; }
+  #dataTable td:nth-of-type(2):before { content: "Name"; }
+  #dataTable td:nth-of-type(3):before { content: "Year"; }
+  #dataTable td:nth-of-type(4):before { content: "Section"; }
+  #dataTable td:nth-of-type(5):before { content: "Status"; }
+  #dataTable td:nth-of-type(6):before { content: "Reason"; }
+  #dataTable td:nth-of-type(7):before { content: "Action"; }
+
+  /* Keep table header for all other tables (like history) */
+  th {
+    background: #1e3a8a;
+    color: white;
+    font-size: 15px;
+  }
+
+  tr:hover { background: #f1f5ff; }
+
+  /* Make history modal table scrollable */
+  #historyModal table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  #historyModal .modal-content {
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+}
+
+</style>
 </head>
 
 <body onload="initFaculty()">
-  <h2>Faculty Dashboard – Absentees & OD</h2>
-  <div id="welcome" style="text-align:center; margin-bottom: 15px; font-weight:600;"></div>
 
-  <div class="filters">
-    <label>Date: <input type="date" id="date"></label>
-    <label>Batch:
-      <select id="batch">
-        <option value="FN">FN</option>
-        <option value="AN">AN</option>
-      </select>
-    </label>
-    <button class="btn" onclick="loadAbsentees()">Load</button>
-    <button class="btn" onclick="logout()">Logout</button>
-  </div>
+<header>📘 Faculty Dashboard </header>
 
-  <div id="facultySectionInfo" 
-     style="text-align:center; font-weight:600; color:#2563eb; margin-bottom:15px;">
+<div class="top-bar">
+  <div id="welcome" style="font-weight:600; color:#1e3a8a;">👨‍🏫 Loading...</div>
+  <button onclick="logout()">Logout</button>
 </div>
 
-  <table id="dataTable">
-    <thead>
-      <tr>
-        <th>Roll No</th>
-        <th>Name</th>
-        <th>Year</th>
-        <th>Section</th>
-        <th>Status</th>
-        <th>Reason</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<div class="filters">
+  <label>Date: <input type="date" id="date"></label>
+  <label>Batch:
+    <select id="batch">
+      <option value="FN">FN</option>
+      <option value="AN">AN</option>
+    </select>
+  </label>
+  <button class="btn" onclick="loadAbsentees()">Load</button>
+</div>
 
-  <button class="save" onclick="saveUpdates()">Save Changes</button>
-  <h3 style="text-align:center; color:#1e3a8a;">Class Attendance Summary</h3>
-  <div id="summary" style="text-align:center; margin-bottom:20px;"></div>
+<div id="facultySectionInfo" 
+  style="text-align:center; font-weight:600; color:#2563eb; margin-bottom:10px;">
+</div>
 
-  <!-- History Modal -->
-  <div id="historyModal" class="modal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeHistory()">X</button>
-      <h3 id="historyTitle"></h3>
-      <table style="width:100%; border-collapse:collapse;">
-        <thead><tr><th>Date</th><th>Batch</th><th>Status</th><th>Reason</th></tr></thead>
-        <tbody id="historyBody"></tbody>
+<table id="dataTable">
+  <thead>
+    <tr>
+      <th>Roll No</th>
+      <th>Name</th>
+      <th>Year</th>
+      <th>Section</th>
+      <th>Status</th>
+      <th>Reason</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<button class="save" onclick="saveUpdates()">💾 Save Changes</button>
+
+<h3 style="text-align:center; color:#1e3a8a;">📊 Class Attendance Summary</h3>
+<div id="summary"></div>
+
+<!-- History Modal -->
+<!-- History Modal -->
+<div id="historyModal" class="modal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeHistory()">X</button>
+    <h3 id="historyTitle"></h3>
+
+    <!-- Scrollable table container -->
+    <div style="max-height:300px; overflow-y:auto; overflow-x:auto; border:1px solid #ddd; border-radius:8px;">
+      <table style="width:100%; border-collapse:collapse; min-width:400px;">
+        <thead style="background:#1e3a8a; color:white; position:sticky; top:0; z-index:2;">
+          <tr>
+            <th style="padding:8px;">Date</th>
+            <th style="padding:8px;">Batch</th>
+            <th style="padding:8px;">Status</th>
+            <th style="padding:8px;">Reason</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody" style="background:white;"></tbody>
       </table>
-      <div id="historySummary" class="summary-box"></div>
     </div>
-  </div>
 
-  <!-- Call Modal -->
+    <div id="historySummary" style="text-align:center; margin-top:10px; font-weight:600;"></div>
+  </div>
+</div>
+
+
+<!-- Call Modal -->
 <div id="callModal" class="modal">
   <div class="modal-content">
     <button class="close-btn" onclick="closeCall()">X</button>
-    <h3>Parent Contact Info</h3>
+    <h3>📞 Parent Contact Info</h3>
     <div id="callInfo" style="text-align:center; font-size:16px; margin-top:10px;"></div>
   </div>
 </div>
+
 
   <script>
     let absentees = [];
@@ -368,4 +555,3 @@ function closeCall() {
   </script>
 </body>
 </html>
-
