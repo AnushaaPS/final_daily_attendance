@@ -1,7 +1,7 @@
 // === common.js ===
 
 // Paste your Google Apps Script Web App URL below
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdaktycP6JyQBtk3SPUIc58fyc0B0Lbl7Pyvww6A_45Q9Jg3uCiZPZUJV64xRMkgbGJA/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbysZydPi5OUh8z_ai_bDgP_1W2tACFBdVaWplL0FZimwg6HNcXGaEqWsjqzo9Te2D2tyg/exec";
 
 /* === API Helper === */
 async function apiFetch(payload) {
@@ -68,6 +68,7 @@ function logout() {
   localStorage.removeItem("user");
   location.href = "index.html";
 }
+
 
 
 
