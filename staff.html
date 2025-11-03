@@ -4,26 +4,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Staff Dashboard - Daily Attendance</title>
   <script src="common.js"></script>
-  
+
   <style>
+    /* ==== Base Styles ==== */
     body {
-      font-family: 'Segoe UI', Arial, sans-serif;
+      font-family: 'Poppins', 'Segoe UI', sans-serif;
       margin: 0;
-      padding: 20px;
-      background: linear-gradient(135deg, #eef3ff, #ffffff);
+      padding: 15px;
+      background: linear-gradient(145deg, #e3f2fd, #f8fafc);
     }
 
     .card {
       background: #fff;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
       max-width: 1000px;
       margin: auto;
+      transition: 0.3s;
     }
 
-    h1 { color: #1e3a8a; font-size: 22px; margin-bottom: 8px; }
-    hr { border: 0; border-top: 1px solid #ddd; margin: 15px 0; }
+    h1 {
+      color: #1e3a8a;
+      font-size: 22px;
+      margin: 0;
+      font-weight: 700;
+    }
+
+    hr {
+      border: 0;
+      border-top: 1px solid #e5e7eb;
+      margin: 15px 0;
+    }
 
     .u-row {
       display: flex;
@@ -31,33 +43,54 @@
       gap: 10px;
       align-items: center;
       justify-content: flex-start;
-      margin-bottom: 12px;
+      margin-bottom: 15px;
     }
 
-    label { font-weight: 600; color: #333; }
-    select, input[type="date"] {
-      padding: 6px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+    label {
+      font-weight: 600;
+      color: #374151;
       font-size: 14px;
+    }
+
+    select, input[type="date"] {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      font-size: 14px;
+      background-color: #f9fafb;
+      transition: 0.2s;
+    }
+
+    select:focus, input[type="date"]:focus {
+      outline: none;
+      border-color: #2563eb;
+      background-color: #fff;
+      box-shadow: 0 0 4px rgba(37, 99, 235, 0.3);
     }
 
     .btn {
       background: linear-gradient(135deg, #2563eb, #1e40af);
       color: white;
-      padding: 8px 14px;
+      padding: 8px 16px;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
       font-weight: 600;
-      transition: 0.2s;
+      font-size: 14px;
+      transition: 0.2s ease-in-out;
     }
-    .btn:hover { transform: scale(1.05); }
 
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3);
+    }
+
+    /* ==== Student Grid ==== */
     .grid {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
+      justify-content: center;
       margin-top: 20px;
     }
 
@@ -65,32 +98,74 @@
       width: 120px;
       padding: 10px;
       text-align: center;
-      border-radius: 10px;
+      border-radius: 14px;
       cursor: pointer;
-      transition: 0.3s;
+      transition: 0.3s ease;
       font-size: 13px;
-      border: 1px solid #ccc;
-      background: #d4f7d4; /* Present by default */
+      border: 1px solid #e5e7eb;
+      background: #dcfce7; /* Present default green */
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
 
-    .student.absent { background: #f9d0d0; border-color: #d9534f; }
-    .student.od { background: #e6d6f7; border-color: #8a2be2; color: #3b0764; }
+    .student:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
 
+    .student strong {
+      display: block;
+      color: #111827;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    /* ==== Status Colors ==== */
+    .student.present {
+      background: #dcfce7;
+      border: 1px solid #16a34a;
+      color: #065f46;
+    }
+    .student.present::before {
+      content: "✅ ";
+      font-size: 16px;
+    }
+
+    .student.absent {
+      background: #fee2e2;
+      border: 1px solid #dc2626;
+      color: #7f1d1d;
+    }
+    .student.absent::before {
+      content: "❌ ";
+      font-size: 16px;
+    }
+
+    .student.od {
+      background: #ede9fe;
+      border: 1px solid #7c3aed;
+      color: #4c1d95;
+    }
+    .student.od::before {
+      content: "🎓 ";
+      font-size: 16px;
+    }
+
+    /* ==== Toast ==== */
     #toast {
       visibility: hidden;
-      min-width: 250px;
-      background-color: #333;
+      min-width: 260px;
+      background-color: #1e293b;
       color: #fff;
       text-align: center;
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 12px;
       position: fixed;
-      z-index: 1;
+      z-index: 99;
       left: 50%;
       bottom: 30px;
       transform: translateX(-50%);
       opacity: 0;
-      transition: opacity 0.5s, bottom 0.5s;
+      transition: opacity 0.4s, bottom 0.4s;
     }
 
     #toast.show {
@@ -99,11 +174,25 @@
       bottom: 50px;
     }
 
+    /* ==== Responsive ==== */
     @media (max-width: 768px) {
-      .student { width: 100px; font-size: 11px; }
-      .u-row { flex-direction: column; align-items: flex-start; }
-      select, input, .btn { width: 100%; }
+      .student {
+        width: 100px;
+        font-size: 11px;
+        padding: 8px;
+      }
+      .u-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      select, input, .btn {
+        width: 100%;
+      }
+      .card {
+        padding: 18px;
+      }
     }
+
   </style>
 </head>
 <body onload="initStaff()">
@@ -111,7 +200,7 @@
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
       <div>
-        <h1>Staff Dashboard</h1>
+        <h1>👩‍🏫 Staff Dashboard</h1>
         <div id="welcome" style="font-size:13px;color:#555;"></div>
       </div>
       <button class="btn" onclick="logout()">Logout</button>
@@ -131,19 +220,10 @@
 
       <label>Year:</label>
       <select id="yearSelect">
-        <option value="">Select</option>
-        <option>I</option>
-        <option>II</option>
-        <option>III</option>
-        <option>IV</option>
       </select>
 
       <label>Section:</label>
       <select id="sectionSelect">
-        <option value="">Select</option>
-        <option>A</option>
-        <option>B</option>
-        <option>C</option>
       </select>
 
       <button class="btn" onclick="loadStudents()">Load Students</button>
@@ -156,190 +236,205 @@
   <div id="toast"></div>
 
 <script>
-  
-let user = null;
-let studentList = [];
-let isLocked = false;
+  /* === Original Logic (unchanged) === */
+  let user = null;
+  let studentList = [];
+  let isLocked = false;
 
-/* === INIT === */
-function initStaff() {
+  async function initStaff() {
   user = requireRole("Staff");
   if (!user) return;
   document.getElementById("welcome").innerText =
     `Signed in as: ${user.name} — Department: ${user.department}`;
+
+  // 🔹 Load Year & Section dynamically
+  try {
+    const res = await apiFetch({
+      action: "getYearSectionByDepartment",
+      department: user.department
+    });
+
+    if (res.success && res.list?.length) {
+      const years = [...new Set(res.list.map(x => x.year))];
+      const sections = [...new Set(res.list.map(x => x.section))];
+
+      const yearSel = document.getElementById("yearSelect");
+      const secSel = document.getElementById("sectionSelect");
+
+      yearSel.innerHTML = '<option value="">Select</option>';
+      years.forEach(y => {
+        yearSel.innerHTML += `<option value="${y}">${y}</option>`;
+      });
+
+      secSel.innerHTML = '<option value="">Select</option>';
+      sections.forEach(s => {
+        secSel.innerHTML += `<option value="${s}">${s}</option>`;
+      });
+    } else {
+      console.warn("No class list found for department", user.department);
+    }
+  } catch (err) {
+    console.error("Failed to load Year/Section:", err);
+  }
 }
 
-/* === Load Students === */
-async function loadStudents() {
-  const date = document.getElementById("dateFilter").value;
-  const batch = document.getElementById("batchSelect").value;
-  const year = document.getElementById("yearSelect").value;
-  const section = document.getElementById("sectionSelect").value;
+  async function loadStudents() {
+    const date = document.getElementById("dateFilter").value;
+    const batch = document.getElementById("batchSelect").value;
+    const year = document.getElementById("yearSelect").value;
+    const section = document.getElementById("sectionSelect").value;
 
-  if (!date || !year || !section) return alert("Please select Date, Year, and Section");
+    if (!date || !year || !section) return alert("Please select Date, Year, and Section");
 
-  document.getElementById("grid").innerHTML = "<div>Loading students...</div>";
-  document.getElementById("saveBtn").disabled = true;
+    document.getElementById("grid").innerHTML = "<div>Loading students...</div>";
+    document.getElementById("saveBtn").disabled = true;
 
-  try {
-    // --- Step 1: Check Lock Status ---
-    const lockCheck = await fetch(SCRIPT_URL, {
-      method: "POST",
-      body: JSON.stringify({ action: "checkLockStatus", date, batch })
-    });
-    const lockData = await lockCheck.json();
+    try {
+      const lockCheck = await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "checkLockStatus", date, batch })
+      });
+      const lockData = await lockCheck.json();
 
-    isLocked = lockData.locked || false;
+      isLocked = lockData.locked || false;
 
-    if (isLocked) {
-      const role = lockData.role || "Unknown Role";
-      const lockedBy = lockData.lockedBy || "Unknown User";
-      alert(`Attendance is locked for this date & batch.\nLocked by admin.\nYou can only view data.`);
+      if (isLocked) {
+        alert("Attendance is locked for this date & batch. You can only view data.");
+      }
+
+      const res = await apiFetch({
+        action: "getStudents",
+        department: user.department,
+        year,
+        section,
+        date,
+        batch
+      });
+
+      if (!res.success) {
+        document.getElementById("grid").innerHTML = "Error loading students.";
+        return;
+      }
+
+      studentList = res.students || [];
+      renderGrid();
+
+    } catch (err) {
+      console.error("Load failed:", err);
+      alert("Error loading data.");
     }
+  }
 
-    // --- Step 2: Load Students ---
-    const res = await apiFetch({
-      action: "getStudents",
-      department: user.department,
-      year,
-      section,
-      date,
-      batch
-    });
+  function renderGrid() {
+    const grid = document.getElementById("grid");
+    grid.innerHTML = "";
 
-    if (!res.success) {
-      document.getElementById("grid").innerHTML = "Error loading students.";
+    if (!studentList.length) {
+      grid.innerHTML = "<div>No students found.</div>";
+      document.getElementById("saveBtn").disabled = true;
       return;
     }
 
-    studentList = res.students || [];
-    renderGrid();
+    studentList.forEach((stu, i) => {
+      const div = document.createElement("div");
+      let cls = "student present";
+      if (stu.Status === "Absent") cls = "student absent";
+      else if (stu.Status === "OD") cls = "student od";
+      div.className = cls;
+      div.innerHTML = `<strong>${stu.RollNo}</strong>${stu.Name}`;
+      div.dataset.index = i;
 
-  } catch (err) {
-    console.error("Load failed:", err);
-    alert("Error loading data.");
+      if (!isLocked) {
+        div.addEventListener("click", e => singleClick(e, () => markAbsent(i, div)));
+        div.addEventListener("dblclick", e => { e.preventDefault(); markOD(i, div); });
+      } else {
+        div.style.cursor = "not-allowed";
+        div.title = "Locked — View only";
+      }
+
+      grid.appendChild(div);
+    });
+
+    document.getElementById("saveBtn").disabled = isLocked;
   }
-}
 
-/* === Render Grid === */
-function renderGrid() {
-  const grid = document.getElementById("grid");
-  grid.innerHTML = "";
-
-  if (!studentList.length) {
-    grid.innerHTML = "<div>No students found.</div>";
-    document.getElementById("saveBtn").disabled = true;
-    return;
+  let clickTimer = null;
+  function singleClick(e, singleFn) {
+    if (clickTimer !== null) {
+      clearTimeout(clickTimer);
+      clickTimer = null;
+      return;
+    }
+    clickTimer = setTimeout(() => { singleFn(); clickTimer = null; }, 250);
   }
 
-  studentList.forEach((stu, i) => {
-    const div = document.createElement("div");
-    let cls = "student present";
-    if (stu.Status === "Absent") cls = "student absent";
-    else if (stu.Status === "OD") cls = "student od";
-    div.className = cls;
-    div.innerHTML = `<strong>${stu.RollNo}</strong><br>${stu.Name}`;
-    div.dataset.index = i;
-
-    if (!isLocked) {
-      // Allow editing only if not locked
-      div.addEventListener("click", e => singleClick(e, () => markAbsent(i, div)));
-      div.addEventListener("dblclick", e => { e.preventDefault(); markOD(i, div); });
+  function markAbsent(i, div) {
+    if (studentList[i].Status === "Absent") {
+      studentList[i].Status = "Present";
+      div.className = "student present";
     } else {
-      div.style.cursor = "not-allowed";
-      div.title = "Locked — View only";
+      studentList[i].Status = "Absent";
+      div.className = "student absent";
+    }
+  }
+
+  function markOD(i, div) {
+    if (studentList[i].Status === "OD") {
+      studentList[i].Status = "Present";
+      div.className = "student present";
+    } else {
+      studentList[i].Status = "OD";
+      div.className = "student od";
+    }
+  }
+
+  async function saveAttendance() {
+    if (isLocked) {
+      alert("Attendance is locked. You cannot make changes.");
+      return;
     }
 
-    grid.appendChild(div);
-  });
+    const date = document.getElementById("dateFilter").value;
+    const batch = document.getElementById("batchSelect").value;
+    if (!date) return alert("Select date");
 
-  // Enable Save button only if unlocked
-  document.getElementById("saveBtn").disabled = isLocked;
-}
+    const updates = studentList.map(s => ({
+      RollNo: s.RollNo,
+      Name: s.Name,
+      ParentName: s.ParentName,
+      ParentPhone: s.ParentPhone,
+      Department: s.Department,
+      Year: s.Year,
+      Section: s.Section,
+      Status: s.Status,
+      Reason: s.Reason || ""
+    }));
 
-/* === Attendance Marking === */
-let clickTimer = null;
-function singleClick(e, singleFn) {
-  if (clickTimer !== null) {
-    clearTimeout(clickTimer);
-    clickTimer = null;
-    return;
-  }
-  clickTimer = setTimeout(() => { singleFn(); clickTimer = null; }, 250);
-}
+    const res = await apiFetch({ action: "saveAttendance", date, batch, updates });
 
-function markAbsent(i, div) {
-  if (studentList[i].Status === "Absent") {
-    studentList[i].Status = "Present";
-    div.className = "student present";
-  } else {
-    studentList[i].Status = "Absent";
-    div.className = "student absent";
-  }
-}
-
-function markOD(i, div) {
-  if (studentList[i].Status === "OD") {
-    studentList[i].Status = "Present";
-    div.className = "student present";
-  } else {
-    studentList[i].Status = "OD";
-    div.className = "student od";
-  }
-}
-
-/* === Save Attendance === */
-async function saveAttendance() {
-  if (isLocked) {
-    alert("Attendance is locked. You cannot make changes.");
-    return;
+    if (res.success) {
+      showToast(`Attendance saved successfully!`);
+      await apiFetch({
+        action: "saveAttendanceStatus",
+        date,
+        batch,
+        year: document.getElementById("yearSelect").value,
+        section: document.getElementById("sectionSelect").value,
+        department: user.department,
+        status: "Taken"
+      });
+    } else {
+      showToast("Save failed: " + (res.message || ""));
+    }
   }
 
-  const date = document.getElementById("dateFilter").value;
-  const batch = document.getElementById("batchSelect").value;
-  if (!date) return alert("Select date");
-
-  const updates = studentList.map(s => ({
-    RollNo: s.RollNo,
-    Name: s.Name,
-    ParentName: s.ParentName,
-    ParentPhone: s.ParentPhone,
-    Department: s.Department,
-    Year: s.Year,
-    Section: s.Section,
-    Status: s.Status,
-    Reason: s.Reason || ""
-  }));
-
-  const res = await apiFetch({ action: "saveAttendance", date, batch, updates });
-
-  if (res.success) {
-    showToast(`Attendance saved successfully!`);
-    await apiFetch({
-      action: "saveAttendanceStatus",
-      date,
-      batch,
-      year: document.getElementById("yearSelect").value,
-      section: document.getElementById("sectionSelect").value,
-      department: user.department,
-      status: "Taken"
-    });
-  } else {
-    showToast("Save failed: " + (res.message || ""));
+  function showToast(msg) {
+    const toast = document.getElementById("toast");
+    toast.innerHTML = msg;
+    toast.className = "show";
+    setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
   }
-}
-
-/* === Toast === */
-function showToast(msg) {
-  const toast = document.getElementById("toast");
-  toast.innerHTML = msg;
-  toast.className = "show";
-  setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
-}
 </script>
 
 </body>
 </html>
-
-
-
