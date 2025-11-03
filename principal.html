@@ -1,155 +1,408 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Principal Dashboard – College Attendance Overview</title>
-  <script src="common.js"></script>
-  
-  <style>
-    body { font-family:'Segoe UI',sans-serif; background:#f3f7ff; margin:0; padding:20px; }
-    h2 { text-align:center; color:#1e3a8a; }
-    .section { margin-bottom:30px; }
-    button, input, select { padding:6px 10px; margin:5px; border-radius:6px; border:1px solid #ccc; }
-    .btn { background:linear-gradient(135deg,#2563eb,#1e40af); color:white; border:none; cursor:pointer; transition:.2s; }
-    .btn:hover { transform:scale(1.05); }
-    #summaryGrid, #classGrid {
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Principal Dashboard – College Attendance Overview</title>
+<script src="common.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f3f7ff;
+    margin: 0;
+    padding: 10px;
+  }
+
+ header {
   display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  justify-content: center; /* center the cards horizontally */
-  margin-top: 15px;
-}
-
-#classGrid h3 {
-  width: 100%;
-  text-align: center;
-  color: #1e3a8a;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #2563eb, #1e40af); /* 🔹 Blue gradient */
+  padding: 15px 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   margin-bottom: 20px;
-}
-    .card { background:white; padding:15px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); width:200px; text-align:center; cursor:pointer; transition:.2s; }
-    .card:hover { transform:scale(1.05); }
-    table { width:100%; border-collapse:collapse; margin-top:10px; }
-    th, td { border:1px solid #ddd; padding:8px; text-align:center; }
-    th { background:#1e3a8a; color:white; }
-    .file-input { margin:10px 0; }
-    .top-summary { display:flex; justify-content:center; gap:20px; margin-bottom:20px; }
-    .top-box { background:white; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); padding:15px 30px; text-align:center; font-size:18px; }
-    /* Slider switch */
-/* === Lock / Unlock Slider Switch === */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 70px;
-  height: 30px;
-  vertical-align: middle;
+  color: white; /* 🔹 Makes all text inside header white */
 }
 
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #ccc;
-  transition: 0.4s;
-  border-radius: 30px;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 24px;
-  width: 24px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: transform 0.4s ease;
-  border-radius: 50%;
-}
-
-/* Move handle to right when checked */
-input:checked + .slider:before {
-  transform: translateX(40px);
-}
-
-/* Gradient background when locked */
-input:checked + .slider {
-  background: linear-gradient(135deg,#2563eb,#1e40af);
-}
-
-/* Text label overlay */
-.slider::after {
-  content: attr(data-label);
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 12px;
+header h2 {
+  color: white; /* 🔹 Ensures heading text is white */
+  margin: 0;
+  font-size: 20px;
   font-weight: 600;
-  color: white;
-  pointer-events: none;
+}
+  .logout-btn {
+    background: #dc2626;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+  }
+  .logout-btn:hover {
+    background: #b91c1c;
+    transform: scale(1.05);
+  }
+
+  .logout-btn i {
+    margin-right: 6px;
+  }
+
+  .section {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  h3 {
+    color: #1e3a8a;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+
+  label {
+    font-weight: 500;
+  }
+
+  input, select, button {
+    padding: 7px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+
+  .btn {
+    background: linear-gradient(135deg,#2563eb,#1e40af);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .btn:hover { transform: scale(1.05); }
+
+  .top-summary {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
+
+  .top-box {
+    background: white;
+    border-radius: 10px;
+    padding: 15px 25px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e3a8a;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  #summaryGrid, #classGrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+  }
+
+  .card {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    width: 180px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: 0.3s;
+    cursor: pointer;
+  }
+  .card:hover { transform: translateY(-5px); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  th {
+    background: #1e3a8a;
+    color: white;
+  }
+
+  /* === Slider Switch === */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 70px;
+    height: 30px;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+
+  .slider {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 30px;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.4s ease;
+  }
+
+  input:checked + .slider {
+    background: linear-gradient(135deg,#2563eb,#1e40af);
+  }
+  input:checked + .slider:before {
+    transform: translateX(40px);
+  }
+
+  .slider::after {
+    content: attr(data-label);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    pointer-events: none;
+  }
+
+  #lockMessage {
+    color: red;
+    font-weight: 600;
+    margin-left: 10px;
+  }
+
+  /* === Popup Modal (View Status) === */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 600px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+
+  .modal-content h4 {
+    margin-top: 0;
+    color: #1e3a8a;
+  }
+
+  .close-btn {
+    background: #dc2626;
+    color: white;
+    border: none;
+    float: right;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+.top-box {
+  flex: 1;
+  background: white;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  font-family: 'Segoe UI', sans-serif;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.top-box strong {
+  display: block;
+  font-size: 14px;
+  color: #000000;
+  margin-bottom: 4px;
+}
+
+.top-box .value {
+  display: block;
+  font-size: 24px;           /* 🔹 Larger number font size */
+  font-weight: 700;          /* 🔹 Bold for visibility */
+  margin-top: 3px;
 }
 
 
+.top-box:hover {
+  transform: scale(1.05);
+}
 
-  </style>
+/* 🔹 Specific colors per type */
+.top-box.total { background: #6495ED; color: #000000; }     /* Light blue */
+.top-box.present { background: #7CFC00; color: #000000; }   /* Light green */
+.top-box.absent { background: #F08080; color: #000000; }    /* Light red */
+.top-box.od { background: #FFA07A; color: #000000; }        /* Light orange */
+.top-box.percent { background: #BA55D3; color: #000000; }   /* Light violet */
+
+
+
+  /* Mobile View */
+ @media (max-width: 600px) {
+
+   .top-box {
+    font-size: 14px;
+    width: 90%;
+    margin: 6px auto;
+  }
+  header {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .filters { 
+    flex-direction: column; 
+    align-items: center; 
+  }
+
+  .card { 
+    width: 90%; 
+  }
+
+  table { 
+    font-size: 12px; 
+  }
+
+  .btn {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+    width: 90%;              /* 🔹 Uniform width across mobile buttons */
+    max-width: 300px;        /* 🔹 Prevents it from being too wide */
+    padding: 12px;           /* 🔹 Consistent button height */
+    font-size: 14px;         /* 🔹 Adjust text size for mobile */
+    border-radius: 8px;      /* 🔹 Rounded for better appearance */
+    display: block;          /* 🔹 Ensures it takes up full line */
+    margin: 6px auto;        /* 🔹 Centers the button */
+  }
+
+  .btn:hover {
+    transform: scale(1.05);
+  }
+}
+
+</style>
 </head>
+
 <body onload="initPrincipal()">
 
-  <h2>Principal Dashboard – College Attendance Overview</h2>
-  <button class="btn" onclick="logout()">Logout</button>
-  <!-- Top College Summary -->
-  <div class="top-summary" id="collegeTopSummary"></div>
+<header>
+  <h2><i class="fa-solid fa-user-tie"></i> Principal Dashboard</h2>
+  <button class="logout-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Logout</button>
+</header>
 
-  <!-- Attendance Summary -->
-  <div class="section">
-    <h3>College-Wide Attendance Summary</h3>
-    <div class="filters">
-      <label>Date: <input type="date" id="date"></label>
-      <label>Batch:
-        <select id="batch">
-          <option value="FN">FN</option>
-          <option value="AN">AN</option>
-        </select>
-      </label>
-      <button class="btn" onclick="loadCollegeSummary()">Load Summary</button>
-      <button class="btn" onclick="downloadCollegeSummary()">Download Summary</button>
-      <button class="btn" onclick="downloadAbsentReport()">Download Absent CSV</button>
-      <button class="btn" onclick="downloadODReport()">Download OD CSV</button>
-      <button class="btn" onclick="loadAttendanceStatus()">View Status</button>
+<!-- Top Summary -->
+<div class="top-summary" id="collegeTopSummary"></div>
 
-    </div>
+<!-- Attendance Summary -->
+<div class="section">
+  <h3><i class="fa-solid fa-chart-line"></i> College-Wide Attendance Summary</h3>
+  
+  <div class="filters">
+    <label>Date: <input type="date" id="date"></label>
+    <label>Batch:
+      <select id="batch">
+        <option value="FN">FN</option>
+        <option value="AN">AN</option>
+      </select>
+    </label>
+    <button class="btn" onclick="loadCollegeSummary()"><i class="fa-solid fa-download"></i> Load</button>
+    <button class="btn" onclick="downloadCollegeSummary()"><i class="fa-solid fa-file-csv"></i> Summary</button>
+    <button class="btn" onclick="downloadAbsentReport()"><i class="fa-solid fa-user-xmark"></i> Absent CSV</button>
+    <button class="btn" onclick="downloadODReport()"><i class="fa-solid fa-id-card"></i> OD CSV</button>
+    <button class="btn" onclick="loadAttendanceStatus()"><i class="fa-solid fa-eye"></i> View Status</button>
+  </div>
 
-    <div class="lock-toggle">
-  <label class="switch">
-    <input type="checkbox" id="lockToggleBtn" onchange="updateSliderLabel(this)">
-    <span class="slider" data-label="Unlock"></span>
-  </label>
-  <span id="lockMessage" style="color:red; font-weight:600; margin-left:10px;"></span>
+  <div class="lock-toggle" style="text-align:center; margin-bottom:10px;">
+    <label class="switch">
+      <input type="checkbox" id="lockToggleBtn" onchange="updateSliderLabel(this)">
+      <span class="slider" data-label="Unlock"></span>
+    </label>
+    <span id="lockMessage"></span>
+  </div>
+
+  <div id="summaryGrid"></div>
+  <div id="classGrid"></div>
+</div>
+
+<!-- Manage HoD Users -->
+<div class="section">
+  <h3><i class="fa-solid fa-users-gear"></i> Manage HoD Users</h3>
+  <div style="text-align:center;">
+    <button class="btn" onclick="downloadHoDTemplate()"><i class="fa-solid fa-file-arrow-down"></i> Template</button>
+    <input type="file" id="hodFile" class="file-input" accept=".csv">
+    <button class="btn" onclick="uploadHoDUsers()"><i class="fa-solid fa-upload"></i> Upload</button>
+  </div>
+  <div style="overflow-x:auto;">
+    <table id="hodTable">
+      <thead>
+        <tr>
+          <th>Email</th><th>Name</th><th>Role</th><th>Department</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Popup -->
+<div class="modal" id="statusModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeStatusModal()">X</button>
+    <h4><i class="fa-solid fa-eye"></i> Attendance Status</h4>
+    <div id="statusTableArea"></div>
+  </div>
 </div>
 
 
 
-    <div id="summaryGrid"></div>
-    <div id="classGrid"></div>
-    <div id="statusTableArea"></div>
-  </div>
+  <!-- ===== JS Functions (SAME LOGIC, FIXED EVENTS) ===== -->
 
-  <!-- Manage HoD Users -->
-  <div class="section">
-    <h3>Manage HoD Users</h3>
-    <button class="btn" onclick="downloadHoDTemplate()">Download Template</button>
-    <input type="file" id="hodFile" class="file-input" accept=".csv">
-    <button class="btn" onclick="uploadHoDUsers()">Upload HoDs</button>
-    <table id="hodTable">
-      <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Department</th><th>Action</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
+
+
+ 
 
   <script>
 
@@ -209,13 +462,13 @@ allOD = data.od || [];
       const percent = ((present/total)*100).toFixed(2);
 
       const div = document.getElementById("collegeTopSummary");
-      div.innerHTML = `
-        <div class="top-box"><strong>Total Students</strong><br>${total}</div>
-        <div class="top-box" style="color:green;"><strong>Present</strong><br>${present}</div>
-        <div class="top-box" style="color:red;"><strong>Absent</strong><br>${absent}</div>
-        <div class="top-box" style="color:orange;"><strong>OD</strong><br>${od}</div>
-        <div class="top-box" style="color:violet;"><strong>Attendance %</strong><br>${percent}</div>
-      `;
+    div.innerHTML = `
+  <div class="top-box total"><strong>Total Students</strong><br><span class="value">${total}</span></div>
+  <div class="top-box present"><strong>Present</strong><br><span class="value">${present}</span></div>
+  <div class="top-box absent"><strong>Absent</strong><br><span class="value">${absent}</span></div>
+  <div class="top-box od"><strong>OD</strong><br><span class="value">${od}</span></div>
+  <div class="top-box percent"><strong>Attendance %</strong><br><span class="value">${percent}</span></div>
+`;
     }
 
     /* === Department Summary === */
@@ -549,5 +802,30 @@ async function toggleLock() {
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
