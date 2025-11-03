@@ -15,6 +15,31 @@
       color: #1e293b;
     }
 
+.filters {
+  display: flex;
+  flex-direction: column;  /* ✅ Makes Batch appear below Date */
+  gap: 10px;               /* Adds space between lines */
+  margin-top: 10px;
+}
+
+.filters label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: #1e3a8a;
+}
+
+.filters input,
+.filters select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 100%;             /* ✅ makes it neat on all screen sizes */
+  max-width: 300px;
+}
+
+    
     h2 {
       text-align: center;
       color: #1e3a8a;
@@ -56,6 +81,7 @@ width:80%;
       cursor: pointer;
       font-weight: 500;
       transition: 0.25s;
+       width: 100%; 
     }
 
     .btn:hover {
@@ -156,9 +182,9 @@ width:80%;
   background: linear-gradient(90deg, #1e3a8a, #2563eb);
   color: white;
   display: flex;
-  justify-content: space-between;
+  justify-content:space-between;  /* Keeps one left, one right */
   align-items: center;
-  padding: 12px 20px;
+  padding: 10px 15px;    /* Adds left spacing */
   border-radius: 10px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
   flex-wrap: wrap;
@@ -167,7 +193,7 @@ width:80%;
 .topbar .title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-size: 1.2em;
   font-weight: 600;
 }
@@ -177,17 +203,31 @@ width:80%;
   color: #ffffff;
 }
 
+    .button-group {
+  display: flex;
+  flex-direction: column;   /* ✅ Stack buttons vertically */
+  gap: 10px;                /* Add spacing between buttons */
+  margin-top: 15px;
+  align-items: flex-start;  /* 
+      Align to left side */
+       width: 100%; 
+}
+
 .logout-btn {
   background: linear-gradient(135deg, #dc2626, #b91c1c);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   padding: 8px 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: 0.2s;
+  transition: 0.3s;
+  width: auto;           /* ✅ prevents stretching */
+  display: inline-flex;  /* ✅ ensures compact layout */
+  align-items: center;
+  gap: 6px;
 }
-
+    
 .logout-btn:hover {
   transform: scale(1.05);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
@@ -231,11 +271,12 @@ width:80%;
 
 <body onload="initHOD()">
 
-  <header class="topbar">
+ <header class="topbar">
   <div class="title">
     <i class="fa-solid fa-user-tie"></i>
     <span>HoD Dashboard – Department: <strong id="hodDept"></strong></span>
   </div>
+
   <button class="btn logout-btn" onclick="logout()">
     <i class="fa-solid fa-right-from-bracket"></i> Logout
   </button>
@@ -254,12 +295,11 @@ width:80%;
           <option value="AN">AN</option>
         </select>
       </label>
-      <div>
-        <button class="btn" onclick="loadSummary()"><i class="fa-solid fa-sync"></i> Load</button>
-        <button class="btn" onclick="downloadSummaryCSV()"><i class="fa-solid fa-file-csv"></i> Class Summary</button>
-        <button class="btn" onclick="downloadStudentwiseCSV()"><i class="fa-solid fa-user-graduate"></i> Student Report</button>
-        
-      </div>
+      <div class="button-group">
+  <button class="btn" onclick="loadSummary()"><i class="fa-solid fa-sync"></i> Load</button>
+  <button class="btn" onclick="downloadSummaryCSV()"><i class="fa-solid fa-file-csv"></i> Class Summary</button>
+  <button class="btn" onclick="downloadStudentwiseCSV()"><i class="fa-solid fa-user-graduate"></i> Student Report</button>
+</div>
     </div>
     <div id="summaryGrid"></div>
   </div>
@@ -577,6 +617,21 @@ function downloadStudentwiseCSV() {
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
