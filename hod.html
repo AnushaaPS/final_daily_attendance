@@ -1,75 +1,284 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HoD Dashboard – Attendance & Management</title>
   <script src="common.js"></script>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <style>
-    body { font-family: 'Segoe UI', sans-serif; background:#f5f8ff; margin:0; padding:20px; }
-    h2 { text-align:center; color:#1e3a8a; }
-    .section { margin-bottom:30px; }
-    button, input, select { padding:6px 10px; margin:5px; border-radius:6px; border:1px solid #ccc; }
-    .btn { background:linear-gradient(135deg,#2563eb,#1e40af); color:white; border:none; cursor:pointer; transition:.2s; }
-    .btn:hover { transform:scale(1.05); }
-    #summaryGrid { display:flex; flex-wrap:wrap; gap:15px; justify-content:center; }
-    .card { background:white; padding:15px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); width:180px; text-align:center; }
-    table { width:100%; border-collapse:collapse; margin-top:10px; }
-    th, td { border:1px solid #ddd; padding:8px; text-align:center; }
-    th { background:#1e3a8a; color:white; }
-    .file-input { margin:10px 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(180deg, #eef3ff, #f7f9ff);
+      margin: 0;
+      padding: 15px;
+      color: #1e293b;
+    }
+
+    h2 {
+      text-align: center;
+      color: #1e3a8a;
+      margin-top: 10px;
+      font-size: 1.6em;
+    }
+
+    .section {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      padding: 15px 20px;
+      margin: 20px auto;
+      max-width: 1000px;
+    }
+
+    .section h3 {
+      color: #1d4ed8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
+
+    button, input, select {
+width:80%;
+      padding: 8px 12px;
+      margin: 5px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 0.95em;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.25s;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 3px 10px rgba(37, 99, 235, 0.4);
+    }
+
+    .logout-btn {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+    }
+
+    #summaryGrid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 15px;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      width: 180px;
+      text-align: center;
+      transition: 0.25s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+      font-size: 0.9em;
+    }
+
+    th {
+      background: #1e3a8a;
+      color: white;
+    }
+
+    .file-input {
+      margin: 10px 0;
+    }
 
     /* Popup modal */
     .modal {
-      display:none; position:fixed; z-index:10; left:0; top:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.5); justify-content:center; align-items:center;
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.4);
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
     }
+
     .modal-content {
-      background:white; padding:20px; border-radius:10px; width:450px;
-      box-shadow:0 2px 10px rgba(0,0,0,0.3);
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 95%;
+      max-width: 450px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+      animation: fadeIn 0.3s ease;
     }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
     .close-btn {
-      background:red; color:white; border:none; border-radius:5px; padding:5px 10px;
-      float:right; cursor:pointer;
+      background: #dc2626;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 5px 10px;
+      float: right;
+      cursor: pointer;
+    }
+    /* === HEADER BAR STYLE === */
+.topbar {
+  background: linear-gradient(90deg, #1e3a8a, #2563eb);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+}
+
+.topbar .title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.topbar .title i {
+  font-size: 1.4em;
+  color: #ffffff;
+}
+
+.logout-btn {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.logout-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* === MOBILE RESPONSIVE HEADER === */
+@media (max-width: 768px) {
+    .section {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      padding: 15px 20px;
+      margin: 20px auto;
+      max-width: 100%;
+    }
+    
+  .topbar {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+  .logout-btn {
+    width: 90%;
+    font-size: 1em;
+  }
+}
+
+
+    /* Responsive layout */
+    @media (max-width: 768px) {
+      body { padding: 10px; }
+      .section { padding: 12px; }
+      h2 { font-size: 1.3em; }
+      button, input, select { width: 100%; margin: 5px 0; font-size: 1em; }
+      .filters { display: flex; flex-direction: column; align-items: stretch; }
+      .card { width: 100%; max-width: 300px; }
+      table, th, td { font-size: 0.85em; }
     }
   </style>
 </head>
+
 <body onload="initHOD()">
 
-  <h2>HoD Dashboard – Department: <span id="hodDept"></span></h2>
+  <header class="topbar">
+  <div class="title">
+    <i class="fa-solid fa-user-tie"></i>
+    <span>HoD Dashboard – Department: <strong id="hodDept"></strong></span>
+  </div>
+  <button class="btn logout-btn" onclick="logout()">
+    <i class="fa-solid fa-right-from-bracket"></i> Logout
+  </button>
+</header>
 
   <!-- Attendance Summary -->
   <div class="section">
-    <h3>Attendance Summary</h3>
+    <h3><i class="fa-solid fa-chart-pie"></i> Attendance Summary</h3>
     <div class="filters">
-      <label>Date: <input type="date" id="date"></label>
-      <label>Batch:
+      <label><i class="fa-solid fa-calendar-days"></i> Date:
+        <input type="date" id="date">
+      </label>
+      <label><i class="fa-solid fa-clock"></i> Batch:
         <select id="batch">
           <option value="FN">FN</option>
           <option value="AN">AN</option>
         </select>
       </label>
-      <button class="btn" onclick="loadSummary()">Load Summary</button>
-      <button class="btn" onclick="downloadSummaryCSV()">Download Class Summary</button>
-      <button class="btn" onclick="downloadStudentwiseCSV()">Download Studentwise Report</button>
-      <button class="btn" onclick="logout()">Logout</button>
+      <div>
+        <button class="btn" onclick="loadSummary()"><i class="fa-solid fa-sync"></i> Load</button>
+        <button class="btn" onclick="downloadSummaryCSV()"><i class="fa-solid fa-file-csv"></i> Class Summary</button>
+        <button class="btn" onclick="downloadStudentwiseCSV()"><i class="fa-solid fa-user-graduate"></i> Student Report</button>
+        
+      </div>
     </div>
     <div id="summaryGrid"></div>
   </div>
 
   <!-- Search student history -->
   <div class="section">
-    <h3>Student Attendance History</h3>
+    <h3><i class="fa-solid fa-user-clock"></i> Student Attendance History</h3>
     <input type="text" id="rollSearch" placeholder="Enter Roll No" />
-    <button class="btn" onclick="viewStudentHistory()">View History</button>
+    <button class="btn" onclick="viewStudentHistory()"><i class="fa-solid fa-eye"></i> View History</button>
   </div>
 
   <!-- Manage Faculty Users -->
   <div class="section">
-    <h3>Faculty Users</h3>
-    <button class="btn" onclick="downloadUsersTemplate()">Download Template</button>
-    <input type="file" id="usersFile" class="file-input" accept=".csv">
-    <button class="btn" onclick="uploadUsers()">Upload Faculty</button>
+    <h3><i class="fa-solid fa-users-gear"></i> Faculty Users</h3>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;">
+      <button class="btn" onclick="downloadUsersTemplate()"><i class="fa-solid fa-download"></i> Template</button>
+      <input type="file" id="usersFile" class="file-input" accept=".csv">
+      <button class="btn" onclick="uploadUsers()"><i class="fa-solid fa-upload"></i> Upload</button>
+    </div>
     <table id="usersTable">
       <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Action</th></tr></thead>
       <tbody></tbody>
@@ -78,24 +287,29 @@
 
   <!-- Upload Students -->
   <div class="section">
-    <h3>Upload Students List</h3>
-    <button class="btn" onclick="downloadStudentsTemplate()">Download Template</button>
-    <input type="file" id="studentsFile" class="file-input" accept=".csv">
-    <button class="btn" onclick="uploadStudents()">Upload Students</button>
+    <h3><i class="fa-solid fa-user-group"></i> Upload Students List</h3>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;">
+      <button class="btn" onclick="downloadStudentsTemplate()"><i class="fa-solid fa-download"></i> Template</button>
+      <input type="file" id="studentsFile" class="file-input" accept=".csv">
+      <button class="btn" onclick="uploadStudents()"><i class="fa-solid fa-upload"></i> Upload</button>
+    </div>
   </div>
 
   <!-- Student History Modal -->
   <div id="historyModal" class="modal">
     <div class="modal-content">
-      <button class="close-btn" onclick="closeHistory()">X</button>
+      <button class="close-btn" onclick="closeHistory()"><i class="fa-solid fa-xmark"></i></button>
       <h3 id="historyTitle"></h3>
-      <table style="width:100%; border-collapse:collapse;">
+      <table>
         <thead><tr><th>Date</th><th>Batch</th><th>Status</th><th>Reason</th></tr></thead>
         <tbody id="historyBody"></tbody>
       </table>
       <div id="historySummary" style="text-align:center; margin-top:10px; font-weight:600;"></div>
     </div>
   </div>
+
+  <!-- Your existing JS logic -->
+
 
   <script>
     let hodDept = "";
@@ -363,3 +577,9 @@ function downloadStudentwiseCSV() {
   </script>
 </body>
 </html>
+
+
+
+
+
+
